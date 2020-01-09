@@ -1,0 +1,29 @@
+unit1=s tag1=UnixTime tag2=message
+unit1=us tag1=SystemClock
+unit1=us unit2=m/s^2 unit3=m/s^2 unit4=m/s^2 tag1=SystemClock tag2=X_Acceleration tag3=Y_Acceleration tag4=Z_Acceleration
+unit1=us unit2=m/s^2 unit3=m/s^2 unit4=m/s^2 tag1=SystemClock tag2=X_Gravity tag3=Y_Gravity tag4=Z_Gravity
+unit1=us unit2=m/s^2 unit3=m/s^2 unit4=m/s^2 tag1=SystemClock tag2=X_Acceleration tag3=Y_Acceleration tag4=Z_Acceleration
+unit1=us tag1=SystemClock
+unit1=us tag1=SystemClock
+unit1=us tag1=SystemClock
+unit1=us unit2=deg/s unit3=deg/s unit4=deg/s tag1=SystemClock tag2=X_RotSpeed tag3=Y_RotSpeed tag4=Z_RotSpeed
+unit1=us unit2=lux tag1=SystemClock tag2=AmbientLight
+unit1=us tag1=SystemClock
+unit1=us unit2=hPa unit3=m unit4=C unit5=hPa tag1=SystemClock tag2=SmoothedAirPressure tag3=UncalibratedBarometerAltitude tag4=AirTemperature tag5=AirPressure
+unit1=us tag1=SystemClock
+unit1=us tag1=SystemClock
+unit1=us tag1=SystemClock
+unit1=us unit2=bpm tag1=SystemClock tag2=HeartRate
+unit1=us tag1=SystemClock tag2=PlethysmogramGreen
+unit1=us tag1=SystemClock
+unit1=us tag1=SystemClock
+unit1=us tag1=SystemClock
+unit1=us tag1=SystemClock
+unit1=us tag1=SystemClock
+unit1=us tag1=SystemClock
+unit1=us unit2=steps unit3=steps unit4=steps unit5=m unit6=kcal unit7=km/h unit8=steps/s unit9=unknown/stop/walk/run tag1=SystemClock tag2=Steps tag3=WalkingSteps tag4=RunningSteps tag5=MovingDistance tag6=CaloriesBurned tag7=LastSpeed tag8=LastSteppingFrequency tag9=LastPedestrianState
+unit1=us tag1=SystemClock
+unit1=us tag1=SystemClock
+unit1=us tag1=SystemClock
+unit1=s unit2=% unit3=boolean tag1=UnixTime tag2=BatteryCharge tag3=IsCharging?
+unit1=s unit2=deg unit3=deg unit4=m unit5=km/h unit6=deg(fromNorth) unit7=km/h unit8=none/out_of_memory/invalid_parameter/permission_denied/not_supported/incorrect_method/network_failed/service_not_available/gps_setting_off/security_restricted/setting_off unit9=s unit10=none/country/region/locality/postalcode/street/detailed unit11=m unit12=m tag1=UnixTime tag2=Latitude tag3=Longitude tag4=Altitude tag5=Speed tag6=Direction tag7=Climb tag8=Error tag9=MeasuringTime tag10=AccuracyLevel tag11=HorizontalAccuracy tag12=VerticalAccuracy

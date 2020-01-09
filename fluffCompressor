@@ -1,0 +1,29 @@
+from os import getcwd, listdir
+from os.path import isfile, join
+import re
+
+mypath = '/Users/Hesham/dev/data'
+onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f)) & f.endswith('.txt') ]
+onlyfiles.sort()
+for file in onlyfiles:
+    with open(mypath + '/' + file, 'rt') as data:
+        str = data.read()
+        x = re.split('\n', str)
+        # ensure same structure for all processed files
+        # if len(x) != 97:
+        #     print(file + ' , ', len(x))
+        # for line in data:
+        #     elements = re.split(':', line)
+        #     if elements[0].replace(' ', '') == 'sg2_err':
+        #         if elements[1].replace(' ', '') == 'string8':
+        #             if elements[2].find('NextFile') != -1:
+        #
+        #
+        #     elif elements[0].replace(' ', '') == 'sg2_all':
+        #         pass
+        #     # if time stamps, get the middle value (median)
+        #     # elif elements[1].replace(' ', '') == 'unit64':
+
+
+
+
