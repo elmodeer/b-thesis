@@ -1,7 +1,7 @@
 import re
 from os import getcwd, listdir
 from os.path import isfile, join
-mypath = '/Users/Hesham/dev/data'
+mypath = '/Users/Hesham/dev/patient9'
 
 
 onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f)) & f.endswith('.txt')]

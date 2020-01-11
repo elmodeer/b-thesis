@@ -1,10 +1,5 @@
-import re
-from os import getcwd, listdir
-from os.path import isfile, join
-import pandas as pd
 from scipy import stats
 import subprocess
-import statistics
 import numpy as np
 
 
@@ -25,8 +20,11 @@ def writeListToFile(argument, file, name):
     file.write('\n')
 
 
-with open('A4acc.txt', 'rt') as infile:
-    fileLines = int(subprocess.check_output(["wc", "-l", 'A4acc.txt']).decode("utf8").split()[0])
+fileName = 'A4acc.txt'
+# can loop over files also in future
+with open(fileName, 'rt') as infile:
+    # bash routine
+    fileLines = int(subprocess.check_output(["wc", "-l", fileName]).decode("utf8").split()[0])
     linesPerIteration = 5
     window = 5
     valuesWindow = 3000
@@ -52,7 +50,7 @@ with open('A4acc.txt', 'rt') as infile:
             end = 0
         start = 0
         if length > 0:
-            with open('A4acc_comp.txt', 'at+') as output:
+            with open(fileName[:-4] + '_' + 'compressed2.txt', 'at+') as output:
                 # process complete windows
 
                 # output.write(lines[0] + '\n')
@@ -64,25 +62,24 @@ with open('A4acc.txt', 'rt') as infile:
                 for k in range(loops):
                     # converting microSec to sec
                     timeCompressed.append(np.floor(unixTime + time[int((start + end) / 2)]/1000000))
-                    accXCompressed.append(stats.trim_mean(accX[start:end], 0.1))
-                    accYCompressed.append(stats.trim_mean(accY[start:end], 0.1))
-                    accZCompressed.append(stats.trim_mean(accZ[start:end], 0.1))
+                    accXCompressed.append(np.round(stats.trim_mean(accX[start:end], 0.1), 2))
+                    accYCompressed.append(np.round(stats.trim_mean(accY[start:end], 0.1), 2))
+                    accZCompressed.append(np.round(stats.trim_mean(accZ[start:end], 0.1), 2))
                     # update indices
                     if k < loops - 1:
                         start = end
                         end += valuesWindow
 
                 # process rest values
-                print(end)
                 error = rest / valuesWindow
                 if loops > 0:
                     lastElement = timeCompressed[-1]
                 else:
-                    lastElement = time[0]
-                timeCompressed.append(lastElement + 120)
-                accXCompressed.append(error * stats.trim_mean(accX[end:], 0.1))
-                accYCompressed.append(error * stats.trim_mean(accY[end:], 0.1))
-                accZCompressed.append(error * stats.trim_mean(accZ[end:], 0.1))
+                    lastElement = unixTime + time[0] / 1000000
+                timeCompressed.append(np.floor(lastElement + 120))
+                accXCompressed.append(np.round(error * stats.trim_mean(accX[end:], 0.1), 2))
+                accYCompressed.append(np.round(error * stats.trim_mean(accY[end:], 0.1), 2))
+                accZCompressed.append(np.round(error * stats.trim_mean(accZ[end:], 0.1), 2))
 
                 # write to file
                 # output.write(str(unixTime))
@@ -93,6 +90,7 @@ with open('A4acc.txt', 'rt') as infile:
                 writeListToFile(accYCompressed, output, 'y:')
                 writeListToFile(accZCompressed, output, 'z:')
             window += 5
+            output.close()
         # pd.DataFrame(accX).plot.hist()
         # average = 0
         # k = 6
