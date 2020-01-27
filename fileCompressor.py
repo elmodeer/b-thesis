@@ -1,5 +1,5 @@
 import matplotlib
-from re import split
+import re
 from scipy import stats
 import subprocess
 import math
@@ -7,8 +7,9 @@ import numpy as np
 from numpy import fft
 from matplotlib import pyplot as plt
 
-
 # %matplotlib inline
+pattern = re.compile("15[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]")
+
 
 def getValues(argument, ints=False):
     temp = argument.split(':')
@@ -22,6 +23,14 @@ def getValues(argument, ints=False):
         return []
 
 
+def match_unix_stamp(unix_stamp):
+    match = pattern.match(str(unix_stamp))
+    if match is not None:
+        return True
+    else:
+        return False
+
+
 def writeListToFile(argument, file, name):
     argument = map(lambda x: str(x) + ',', argument)
 
@@ -33,7 +42,8 @@ def writeListToFile(argument, file, name):
 def get_sensor_name(file_name):
     sensor_name_length = len('sg2_xxx')
     start_index = file_name.find('sg2')
-    return file_name[start_index:sensor_name_length]
+    end_index = start_index + sensor_name_length
+    return file_name[start_index:end_index]
 
 
 def getComponents(s_type):
@@ -51,7 +61,7 @@ def getComponents(s_type):
     return switcher.get(s_type, -1)
 
 
-def get_lines(in_file,components):
+def get_lines(in_file, components):
     lines = []
     for i in range(components):
         # parsing unix time stamp
@@ -167,8 +177,13 @@ def compress(file_name, output_dir='', file_path=''):
                         # if components == 'three':
                         if (end_index - start_index) != compress_range:
                             print('wrong indices are being evaluated')
-                        time_series_compressed.append(
-                            int(unixTime + time_series[int((start_index + end_index) / 2)] / 1000000))
+
+                        time_element = int(unixTime + time_series[int((start_index + end_index) / 2)] / 1000000)
+                        if match_unix_stamp(time_element):
+                            time_series_compressed.append(time_element)
+                        else:
+                            # this entry is corrupt
+                            continue
 
                         value1_compressed.append(np.round(stats.trim_mean(lines[2][start_index:end_index], 0.1), 2))
                         value1_std_Dev.append(np.round(np.std(lines[2][start_index:end_index]), 2))
@@ -207,59 +222,64 @@ def compress(file_name, output_dir='', file_path=''):
                     else:
                         lastElement = unixTime + time_series[0] / 1000000
                     if length != end_index:
-                        time_series_compressed.append(int(lastElement + 120))
-                        value1_compressed.append(np.round(stats.trim_mean(lines[2][end_index:], 0.1), 2))
-                        value1_std_Dev.append(np.round(np.std(lines[2][end_index:]), 2))
-                        if math.isnan(value1_compressed[-1]) or math.isnan(value1_std_Dev[-1]):
-                            print("nan")
-                        if sensor_name != 'sg2_ple':
-                            value2_compressed.append(np.round(stats.trim_mean(lines[3][end_index:], 0.1), 2))
-                            value2_std_Dev.append(np.round(np.std(lines[3][end_index:]), 2))
+                        time_element = int(lastElement + 120)
+                        if match_unix_stamp(time_element):
+                            time_series_compressed.append(time_element)
+                            value1_compressed.append(np.round(stats.trim_mean(lines[2][end_index:], 0.1), 2))
+                            value1_std_Dev.append(np.round(np.std(lines[2][end_index:]), 2))
+                            if math.isnan(value1_compressed[-1]) or math.isnan(value1_std_Dev[-1]):
+                                print("nan")
+                            if sensor_name != 'sg2_ple':
+                                value2_compressed.append(np.round(stats.trim_mean(lines[3][end_index:], 0.1), 2))
+                                value2_std_Dev.append(np.round(np.std(lines[3][end_index:]), 2))
 
-                            value3_compressed.append(np.round(stats.trim_mean(lines[4][end_index:], 0.1), 2))
-                            value3_std_Dev.append(np.round(np.std(lines[4][end_index:]), 2))
-                        if sensor_name == 'sg2_hrt' or sensor_name == 'sg2_ped':
-                            value4_compressed.append(np.round(stats.trim_mean(lines[5][end_index:], 0.1), 2))
-                            value4_std_Dev.append(np.round(np.std(lines[5][end_index:]), 2))
+                                value3_compressed.append(np.round(stats.trim_mean(lines[4][end_index:], 0.1), 2))
+                                value3_std_Dev.append(np.round(np.std(lines[4][end_index:]), 2))
+                            if sensor_name == 'sg2_hrt' or sensor_name == 'sg2_ped':
+                                value4_compressed.append(np.round(stats.trim_mean(lines[5][end_index:], 0.1), 2))
+                                value4_std_Dev.append(np.round(np.std(lines[5][end_index:]), 2))
+
+                            if sensor_name == 'sg2_ped':
+                                value5_compressed.append(np.round(stats.trim_mean(lines[6][end_index:], 0.1), 2))
+                                value5_std_Dev.append(np.round(np.std(lines[6][end_index:]), 2))
+
+                                value6_compressed.append(np.round(stats.trim_mean(lines[7][end_index:], 0.1), 2))
+                                value6_std_Dev.append(np.round(np.std(lines[7][end_index:]), 2))
+
+                                value7_compressed.append(np.round(stats.trim_mean(lines[8][end_index:], 0.1), 2))
+                                value7_std_Dev.append(np.round(np.std(lines[8][end_index:]), 2))
+
+                                value8_compressed.append(np.round(stats.trim_mean(lines[9][end_index:], 0.1), 2))
+                                value8_std_Dev.append(np.round(np.std(lines[9][end_index:]), 2))
+
+                    if len(time_series_compressed) != 0:
+                        writeListToFile(time_series_compressed, output, 'time_series:')
+                        writeListToFile(value1_compressed, output, '1:')
+                        writeListToFile(value1_std_Dev, output, 'value1_std_Dev:')
+
+                        if sensor_name != 'sg2_ple':
+                            writeListToFile(value2_compressed, output, '2:')
+                            writeListToFile(value2_std_Dev, output, 'value2_std_Dev:')
+
+                            writeListToFile(value3_compressed, output, '3:')
+                            writeListToFile(value3_std_Dev, output, 'value3_std_Dev:')
+                        if sensor_name in ['sg2_hrt', 'sg2_ped']:
+                            writeListToFile(value4_compressed, output, '4:')
+                            writeListToFile(value4_std_Dev, output, 'value4_std_Dev:')
 
                         if sensor_name == 'sg2_ped':
-                            value5_compressed.append(np.round(stats.trim_mean(lines[6][end_index:], 0.1), 2))
-                            value5_std_Dev.append(np.round(np.std(lines[6][end_index:]), 2))
+                            writeListToFile(value5_compressed, output, '5:')
+                            writeListToFile(value5_std_Dev, output, 'value5_std_Dev:')
 
-                            value6_compressed.append(np.round(stats.trim_mean(lines[7][end_index:], 0.1), 2))
-                            value6_std_Dev.append(np.round(np.std(lines[7][end_index:]), 2))
+                            writeListToFile(value6_compressed, output, '6:')
+                            writeListToFile(value6_std_Dev, output, 'value6_std_Dev:')
 
-                            value7_compressed.append(np.round(stats.trim_mean(lines[8][end_index:], 0.1), 2))
-                            value7_std_Dev.append(np.round(np.std(lines[8][end_index:]), 2))
+                            writeListToFile(value7_compressed, output, '7:')
+                            writeListToFile(value7_std_Dev, output, 'value7_std_Dev:')
 
-                            value8_compressed.append(np.round(stats.trim_mean(lines[9][end_index:], 0.1), 2))
-                            value8_std_Dev.append(np.round(np.std(lines[9][end_index:]), 2))
-
-                    writeListToFile(time_series_compressed, output, 'time_series:')
-                    writeListToFile(value1_compressed, output, '1:')
-                    writeListToFile(value1_std_Dev, output, 'value1_std_Dev:')
-
-                    if components == 5 or components == 6 or components == 10:
-                        writeListToFile(value2_compressed, output, '2:')
-                        writeListToFile(value2_std_Dev, output, 'value2_std_Dev:')
-
-                        writeListToFile(value3_compressed, output, '3:')
-                        writeListToFile(value3_std_Dev, output, 'value3_std_Dev:')
-                    if components == 6 or components == 10:
-                        writeListToFile(value4_compressed, output, '4:')
-                        writeListToFile(value4_std_Dev, output, 'value4_std_Dev:')
-
-                    if components == 10:
-                        writeListToFile(value5_compressed, output, '5:')
-                        writeListToFile(value5_std_Dev, output, 'value5_std_Dev:')
-
-                        writeListToFile(value6_compressed, output, '6:')
-                        writeListToFile(value6_std_Dev, output, 'value6_std_Dev:')
-
-                        writeListToFile(value7_compressed, output, '7:')
-                        writeListToFile(value7_std_Dev, output, 'value7_std_Dev:')
-
-                        writeListToFile(value8_compressed, output, '8:')
-                        writeListToFile(value8_std_Dev, output, 'value8_std_Dev:')
+                            writeListToFile(value8_compressed, output, '8:')
+                            writeListToFile(value8_std_Dev, output, 'value8_std_Dev:')
                 output.close()
             window += components
+        print(str(window) + ' read from ' + str(file_lines))
+        print("compression finished for file " + file_name)

@@ -2,7 +2,9 @@ import subprocess
 import pandas as pd
 import numpy as np
 from re import split
+import re
 from fileCompressor import get_sensor_name
+
 
 def getValues(argument):
     ints = False
@@ -31,13 +33,13 @@ def get_lines_to_read(s_type):
         'sg2_ple': 3,
         'sg2_ped': 17,
         'sg2_bar': 9,
-        # exception: without the unix start time as it is already in seconds
-        'sg2_gps': 24
+        # exception: just the sensor components
+        'sg2_gps': 12
     }
     return switcher.get(s_type, -1)
 
 
-def merge(df_collection):
+def merge(df_collection, prefix):
     # merge with the biggest df
     df_lengths = []
     for i in df_collection:
@@ -45,6 +47,35 @@ def merge(df_collection):
 
     biggest_index = df_lengths.index(max(df_lengths))
     df = df_collection[biggest_index]
+    complete_df = pd.DataFrame(columns=['time', prefix + '_' + 'accX', 'accX_std',
+                                                prefix + '_' + 'accY', 'accY_std',
+                                                prefix + '_' + 'accZ', 'accZ_std',
+                                                prefix + '_' + 'gyrX', 'gyrX_std',
+                                                prefix + '_' + 'gyrY', 'gyrY_std',
+                                                prefix + '_' + 'gyrZ', 'gyrZ_std',
+                                                prefix + '_' + 'heartR', 'heartR_std',
+                                                prefix + '_' + 'h1', 'h1_std',
+                                                prefix + '_' + 'h2', 'h2_std',
+                                                prefix + '_' + 'h3', 'h3_std',
+                                                prefix + '_' + 'steps', 'steps_std',
+                                                prefix + '_' + 'WalkingSteps', 'W_St_std',
+                                                prefix + '_' + 'RunningSteps', 'RS_std',
+                                                prefix + '_' + 'MovingDistance', 'MD_std',
+                                                prefix + '_' + 'CaloriesBurned', 'CB_std',
+                                                prefix + '_' + 'LastSpeed', 'LS_std',
+                                                prefix + '_' + 'LastSteppingFrequency', 'LSF_std',
+                                                prefix + '_' + 'LastPedestrianState', 'LPS_std',
+                                                prefix + '_' + 'Latitude',
+                                                prefix + '_' + 'Longitude',
+                                                prefix + '_' + 'Altitude',
+                                                prefix + '_' + 'Speed',
+                                                prefix + '_' + 'Direction',
+                                                prefix + '_' + 'Climb',
+                                                prefix + '_' + 'Error',
+                                                prefix + '_' + 'MeasuringTime',
+                                                prefix + '_' + 'AccuracyLevel',
+                                                prefix + '_' + 'HorizontalAccuracy',
+                                                prefix + '_' + 'VerticalAccuracy'])
 
     # remove this df
     del df_collection[biggest_index]
@@ -57,6 +88,17 @@ def merge(df_collection):
             while index < df_2_length:
                 row_df = df.iloc[index]
                 row_df_2 = df_2.iloc[index]
+                time_diff = row_df['time'] - row_df_2['time']
+
+                if 120 < time_diff < 240:
+                    pass
+                elif time_diff < 120:
+                    pass
+                elif time_diff > 240:
+                    pass
+                else:
+                    pass
+
                 # do some shit
 
     return df
@@ -72,7 +114,8 @@ def to_csv(files, prefix, file_path=''):
         lines_to_read = get_lines_to_read(sensor_name)
 
         with open(file_path + '/' + file_name, 'rt') as file:
-            fileLines = int(subprocess.check_output(["wc", "-l", file_path + '/' + file_name]).decode("utf8").split()[0])
+            fileLines = int(
+                subprocess.check_output(["wc", "-l", file_path + '/' + file_name]).decode("utf8").split()[0])
             # as every component got its std dev
             lines_per_iteration = lines_to_read
             window = 0
@@ -82,7 +125,6 @@ def to_csv(files, prefix, file_path=''):
             all_1_std, all_2_std, all_3_std, all_4_std, all_5_std, all_6_std = []
             all_7_std, all_8_std, all_9_std, all_10_std, all_11_std, all_12_std = []
 
-            # print(file_name + ', ' + str(fil))
             while window < fileLines:
                 file_lines = []
                 for i in range(lines_per_iteration):
@@ -91,17 +133,28 @@ def to_csv(files, prefix, file_path=''):
                 timeAll.extend(file_lines[0])
                 all_1.extend(file_lines[1])
                 all_1_std.extend((file_lines[2]))
-                # if len(all_1) != len(all_1_std):
-                #     print("asdfas")
-                if sensor_name != 'sg2_ple':
+                if sensor_name == 'sg2_gps':
+                    all_2.extend(file_lines[2])
+                    all_3.extend(file_lines[3])
+                    all_4.extend(file_lines[4])
+                    all_5.extend(file_lines[5])
+                    all_6.extend(file_lines[6])
+                    all_7.extend(file_lines[7])
+                    all_8.extend(file_lines[8])
+                    all_9.extend(file_lines[9])
+                    all_10.extend(file_lines[10])
+                    all_11.extend(file_lines[11])
+                    all_12.extend(file_lines[12])
+
+                elif sensor_name != 'sg2_ple':
                     all_2.extend(file_lines[3])
                     all_2_std.extend(file_lines[4])
                     all_3.extend(file_lines[5])
                     all_3_std.extend(file_lines[6])
-                if sensor_name in ['sg2_hrt', 'sg2_ped', 'sg2_gps']:
+                elif sensor_name in ['sg2_hrt', 'sg2_ped']:
                     all_4.extend(file_lines[7])
                     all_4_std.extend(file_lines[8])
-                if sensor_name in ['sg2_ped', 'sg2_gps']:
+                elif sensor_name == 'sg2_ped':
                     all_5.extend(file_lines[9])
                     all_5_std.extend(file_lines[10])
                     all_6.extend(file_lines[11])
@@ -110,15 +163,7 @@ def to_csv(files, prefix, file_path=''):
                     all_7_std.extend(file_lines[14])
                     all_8.extend(file_lines[15])
                     all_8_std.extend(file_lines[16])
-                if sensor_name == 'sg2_gps':
-                    all_9.extend(file_lines[17])
-                    all_9_std.extend(file_lines[18])
-                    all_10.extend(file_lines[19])
-                    all_10_std.extend(file_lines[20])
-                    all_11.extend(file_lines[20])
-                    all_11_std.extend(file_lines[21])
-                    all_12.extend(file_lines[22])
-                    all_12_std.extend(file_lines[23])
+
                 # print(window)
                 window += lines_per_iteration
 
@@ -128,9 +173,9 @@ def to_csv(files, prefix, file_path=''):
                                                    all_2, all_2_std,
                                                    all_3, all_3_std]),
                                   columns=['time',
-                                           prefix + '_' + sensor_name + '_' + 'x', 'x_std',
-                                           prefix + '_' + sensor_name + '_' + 'y', 'y_std',
-                                           prefix + '_' + sensor_name + '_' + 'z', 'z_std'])
+                                           prefix + '_' + sensor_name + 'X', 'x_std',
+                                           prefix + '_' + sensor_name + 'Y', 'y_std',
+                                           prefix + '_' + sensor_name + 'Z', 'z_std'])
 
             elif sensor_name == 'sg2_hrt':
                 df = pd.DataFrame(np.column_stack([timeAll,
@@ -164,24 +209,24 @@ def to_csv(files, prefix, file_path=''):
                                            prefix + '_' + sensor_name + '_' + 'LastPedestrianState', 'LPS_std'])
             elif sensor_name == 'sg2_gps':
                 df = pd.DataFrame(np.column_stack([timeAll,
-                                                   all_1, all_1_std, all_2, all_2_std,
-                                                   all_3, all_3_std, all_4, all_4_std,
-                                                   all_5, all_5_std, all_6, all_6_std,
-                                                   all_7, all_7_std, all_8, all_7_std,
-                                                   all_9, all_9_std, all_10,all_10_std,
-                                                   all_11, all_11_std, all_12, all_12_std]),
+                                                   all_1, all_2,
+                                                   all_3, all_4,
+                                                   all_5, all_6,
+                                                   all_7, all_8,
+                                                   all_9, all_10,
+                                                   all_11, all_12]),
                                   columns=['time',
-                                           prefix + '_' + sensor_name + '_' + 'Latitude', 'La_std',
-                                           prefix + '_' + sensor_name + '_' + 'Longitude', 'Lo_std',
-                                           prefix + '_' + sensor_name + '_' + 'Altitude', 'Al_std',
-                                           prefix + '_' + sensor_name + '_' + 'Speed', 'Sp_std',
-                                           prefix + '_' + sensor_name + '_' + 'Direction', 'Dir_std',
-                                           prefix + '_' + sensor_name + '_' + 'Climb', 'Cl_std',
-                                           prefix + '_' + sensor_name + '_' + 'Error', 'Er_std',
-                                           prefix + '_' + sensor_name + '_' + 'MeasuringTime', 'MT_std',
-                                           prefix + '_' + sensor_name + '_' + 'AccuracyLevel', 'AL_std',
-                                           prefix + '_' + sensor_name + '_' + 'HorizontalAccuracy', 'HA_std',
-                                           prefix + '_' + sensor_name + '_' + 'VerticalAccuracy', 'VA_std'])
+                                           prefix + '_' + sensor_name + '_' + 'Latitude',
+                                           prefix + '_' + sensor_name + '_' + 'Longitude',
+                                           prefix + '_' + sensor_name + '_' + 'Altitude',
+                                           prefix + '_' + sensor_name + '_' + 'Speed',
+                                           prefix + '_' + sensor_name + '_' + 'Direction',
+                                           prefix + '_' + sensor_name + '_' + 'Climb',
+                                           prefix + '_' + sensor_name + '_' + 'Error',
+                                           prefix + '_' + sensor_name + '_' + 'MeasuringTime',
+                                           prefix + '_' + sensor_name + '_' + 'AccuracyLevel',
+                                           prefix + '_' + sensor_name + '_' + 'HorizontalAccuracy',
+                                           prefix + '_' + sensor_name + '_' + 'VerticalAccuracy'])
             # when sg2_ple
             else:
                 df = pd.DataFrame(np.column_stack([timeAll,
@@ -194,5 +239,5 @@ def to_csv(files, prefix, file_path=''):
             index += 1
             file.close()
     # merge data frames:
-    all_df = merge(df_collection)
+    all_df = merge(df_collection, prefix)
     print("here")
