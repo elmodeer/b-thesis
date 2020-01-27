@@ -40,8 +40,8 @@ out_put_path = '/Users/Hesham/dev/fluffDecoder/' + patient + '-res'
 #     print('files are not compressed correctly')
 # else:
 #     print('compression sounds nice')
-#     to_csv(compressed_files_x, 'X', file_path=out_put_path)
-#     to_csv(compressed_files_y, 'Y', file_path=out_put_path)
+#     to_csv(compressed_files_x, 'D', file_path=out_put_path)
+#     to_csv(compressed_files_y, 'N', file_path=out_put_path)
 #     # for f in compressed_files:
 #     #     print('starting ' + f)
 #     #     to_csv(f, file_path=out_put_path)

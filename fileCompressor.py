@@ -44,7 +44,9 @@ def getComponents(s_type):
         'sg2_gyr': 5,
         'sg2_ple': 3,
         'sg2_ped': 10,
-        'sg2_bar': 6
+        'sg2_bar': 6,
+        'sg2_gps': 13
+
     }
     return switcher.get(s_type, -1)
 
@@ -172,7 +174,7 @@ def compress(file_name, output_dir='', file_path=''):
                         value1_std_Dev.append(np.round(np.std(lines[2][start_index:end_index]), 2))
                         if math.isnan(value1_compressed[-1]) or math.isnan(value1_std_Dev[-1]):
                             print("nan")
-                        if sensor_name == 'sg2_acc' or sensor_name == 'sg2_hrt' or sensor_name == 'sg2_ped':
+                        if sensor_name != 'sg2_ple':
                             value2_compressed.append(np.round(stats.trim_mean(lines[3][start_index:end_index], 0.1), 2))
                             value2_std_Dev.append(np.round(np.std(lines[3][start_index:end_index]), 2))
 
@@ -210,7 +212,7 @@ def compress(file_name, output_dir='', file_path=''):
                         value1_std_Dev.append(np.round(np.std(lines[2][end_index:]), 2))
                         if math.isnan(value1_compressed[-1]) or math.isnan(value1_std_Dev[-1]):
                             print("nan")
-                        if sensor_name == 'sg2_acc' or sensor_name == 'sg2_hrt' or sensor_name == 'sg2_ped':
+                        if sensor_name != 'sg2_ple':
                             value2_compressed.append(np.round(stats.trim_mean(lines[3][end_index:], 0.1), 2))
                             value2_std_Dev.append(np.round(np.std(lines[3][end_index:]), 2))
 
