@@ -3,40 +3,7 @@ import pandas as pd
 import numpy as np
 from re import split
 import re
-from fileCompressor import get_sensor_name
-
-
-def getValues(argument):
-    ints = False
-    temp = argument.split(':')
-    if len(temp) == 2:
-        if temp[0].strip() == 'time_series':
-            ints = True
-        values = temp[1].strip(' []\n')
-        if len(values) > 1:
-            if ints:
-                return [int(x) for x in values.split(',')[:-1]]
-            else:
-                return [float(x) for x in values.split(',')[:-1]]
-        else:
-            return []
-    else:
-        return []
-
-
-def get_lines_to_read(s_type):
-    # structure is unix timeStamp + time offsets + (sensor components * 2) cause we add std-dev for each component
-    switcher = {
-        'sg2_acc': 7,
-        'sg2_hrt': 9,
-        'sg2_gyr': 7,
-        'sg2_ple': 3,
-        'sg2_ped': 17,
-        'sg2_bar': 9,
-        # exception: just the sensor components
-        'sg2_gps': 12
-    }
-    return switcher.get(s_type, -1)
+from fluffUtil import get_sensor_name, get_lines_to_read, get_values
 
 
 def merge(df_collection, prefix):
@@ -128,7 +95,7 @@ def to_csv(files, prefix, file_path=''):
             while window < fileLines:
                 file_lines = []
                 for i in range(lines_per_iteration):
-                    file_lines.append(getValues(file.readline()))
+                    file_lines.append(get_values(file.readline()))
 
                 timeAll.extend(file_lines[0])
                 all_1.extend(file_lines[1])

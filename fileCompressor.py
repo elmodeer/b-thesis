@@ -4,78 +4,11 @@ from scipy import stats
 import subprocess
 import math
 import numpy as np
+from fluffUtil import get_sensor_name, get_lines, writeListToFile, match_unix_stamp, get_components
 from numpy import fft
 from matplotlib import pyplot as plt
 
 # %matplotlib inline
-pattern = re.compile("15[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]")
-
-
-def getValues(argument, ints=False):
-    temp = argument.split(':')
-    values = temp[1].strip(' []\n')
-    if len(values) > 1:
-        if ints:
-            return [int(x) for x in values.split(',')]
-        else:
-            return [float(x) for x in values.split(',')]
-    else:
-        return []
-
-
-def match_unix_stamp(unix_stamp):
-    match = pattern.match(str(unix_stamp))
-    if match is not None:
-        return True
-    else:
-        return False
-
-
-def writeListToFile(argument, file, name):
-    argument = map(lambda x: str(x) + ',', argument)
-
-    file.write(name)
-    file.writelines(argument)
-    file.write('\n')
-
-
-def get_sensor_name(file_name):
-    sensor_name_length = len('sg2_xxx')
-    start_index = file_name.find('sg2')
-    end_index = start_index + sensor_name_length
-    return file_name[start_index:end_index]
-
-
-def getComponents(s_type):
-    # structure is unix timeStamp + time offsets + sensor components
-    switcher = {
-        'sg2_acc': 5,
-        'sg2_hrt': 6,
-        'sg2_gyr': 5,
-        'sg2_ple': 3,
-        'sg2_ped': 10,
-        'sg2_bar': 6,
-        'sg2_gps': 13
-
-    }
-    return switcher.get(s_type, -1)
-
-
-def get_lines(in_file, components):
-    lines = []
-    for i in range(components):
-        # parsing unix time stamp
-        if i == 0:
-            lines.append(int(in_file.readline()))
-            continue
-        # parsing time offsets
-        if i == 1:
-            lines.append(getValues(in_file.readline(), ints=True))
-            continue
-        # parsing normal sensor values
-        lines.append(getValues(in_file.readline()))
-    return lines
-
 
 # def compress_gps(file_name, output_dir='', file_path=''):
 #     sensor_name = get_sensor_name(file_name)
@@ -102,7 +35,7 @@ def compress(file_name, output_dir='', file_path=''):
     """
 
     sensor_name = get_sensor_name(file_name)
-    components = getComponents(sensor_name)
+    components = get_components(sensor_name)
 
     with open(file_path + '/' + file_name, 'rt') as infile:
         # bash routine
