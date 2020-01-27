@@ -11,10 +11,12 @@ my_path = '/Volumes/hex/' + patient + '-txt'
 all_files = [f for f in listdir(my_path) if isfile(join(my_path, f)) & f.endswith('.txt')]
 #
 # # separate sensor files
-labels = ['sg2_acc', 'sg2_hrt', 'sg2_gyr', 'sg2_ple', 'sg2_ped', 'sg2_bar', 'sg2_gps']
-# gps_label = ['sg2_gps']
+# labels = ['sg2_acc', 'sg2_hrt', 'sg2_gyr', 'sg2_ple', 'sg2_ped', 'sg2_bar', 'sg2_gps']
+gps_label = ['sg2_gps']
 
-separate(my_path, all_files, 'A4-6C-F1-A0-2A-40', 'A4-6C-F1-09-C9-31', patient + '-res', labels)
+# separate(my_path, all_files, 'A4-6C-F1-A0-2A-40', 'A4-6C-F1-09-C9-31', patient + '-res', labels)
+separate(my_path, all_files, 'A4-6C-F1-A0-2A-40', 'A4-6C-F1-09-C9-31', patient + '-res', gps_label, unix_time=False)
+
 print('separation finished')
 
 # validate results
