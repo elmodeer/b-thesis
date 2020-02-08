@@ -1,5 +1,4 @@
 import matplotlib
-import re
 from scipy import stats
 import subprocess
 import math
@@ -9,20 +8,6 @@ from numpy import fft
 from matplotlib import pyplot as plt
 
 # %matplotlib inline
-
-# def compress_gps(file_name, output_dir='', file_path=''):
-#     sensor_name = get_sensor_name(file_name)
-#     components = 13
-#
-#     with open(file_path + '/' + file_name, 'rt') as in_file:
-#         # bash routine
-#         file_lines = int(subprocess.check_output(["wc", "-l", file_path + '/' + file_name]).decode("utf8").split()[0])
-#         window = components
-#         while window < file_lines:
-#             lines = get_lines(in_file, components)
-#             unix_time = lines[0]
-#             time_series = lines[1]
-#             with open(output_dir + '/' + file_name[:-4] + '_' + 'compressed.txt', 'at+') as output:
 
 
 def compress(file_name, output_dir='', file_path=''):
@@ -54,13 +39,13 @@ def compress(file_name, output_dir='', file_path=''):
             end_index = 0
 
             if length > 1:
-                compress_range = int(120000000 / (time_series[1] - time_series[0]))
+                compress_range = int(60000000 / (time_series[1] - time_series[0]))
                 if compress_range != 0:
                     loops = int(np.floor(length / compress_range))
                     if length >= compress_range:
                         end_index = compress_range
                 # file_name[:-4] -> removes the .txt extension
-                with open(output_dir + '/' + file_name[:-4] + '_' + 'compressed.txt', 'at+') as output:
+                with open(output_dir + '/' + file_name[:-4] + '_' + 'compressed.txt', 'a+') as output:
                     # process complete windows
 
                     # output.write(lines[0] + '\n')
@@ -81,29 +66,22 @@ def compress(file_name, output_dir='', file_path=''):
                     #
                     # print('asdf')
                     time_series_compressed = []
-                    value1_compressed = []
-                    value1_std_Dev = []
-
-                    value2_compressed = []
-                    value2_std_Dev = []
-
-                    value3_compressed = []
-                    value3_std_Dev = []
-
-                    value4_compressed = []
-                    value4_std_Dev = []
-
-                    value5_compressed = []
-                    value5_std_Dev = []
-
-                    value6_compressed = []
-                    value6_std_Dev = []
-
-                    value7_compressed = []
-                    value7_std_Dev = []
-
-                    value8_compressed = []
-                    value8_std_Dev = []
+                    val1_compressed = []
+                    val2_compressed = []
+                    val3_compressed = []
+                    val4_compressed = []
+                    val5_compressed = []
+                    val6_compressed = []
+                    val7_compressed = []
+                    val8_compressed = []
+                    val2_std_dev = []
+                    val1_std_dev = []
+                    val3_std_dev = []
+                    val4_std_dev = []
+                    val5_std_dev = []
+                    val6_std_dev = []
+                    val7_std_dev = []
+                    val8_std_dev = []
 
                     for k in range(loops):
                         # converting microSec to sec
@@ -118,31 +96,31 @@ def compress(file_name, output_dir='', file_path=''):
                             # this entry is corrupt
                             continue
 
-                        value1_compressed.append(np.round(stats.trim_mean(lines[2][start_index:end_index], 0.1), 2))
-                        value1_std_Dev.append(np.round(np.std(lines[2][start_index:end_index]), 2))
-                        if math.isnan(value1_compressed[-1]) or math.isnan(value1_std_Dev[-1]):
+                        val1_compressed.append(np.round(stats.trim_mean(lines[2][start_index:end_index], 0.1), 2))
+                        val1_std_dev.append(np.round(np.std(lines[2][start_index:end_index]), 2))
+                        if math.isnan(val1_compressed[-1]) or math.isnan(val1_std_dev[-1]):
                             print("nan")
                         if sensor_name != 'sg2_ple':
-                            value2_compressed.append(np.round(stats.trim_mean(lines[3][start_index:end_index], 0.1), 2))
-                            value2_std_Dev.append(np.round(np.std(lines[3][start_index:end_index]), 2))
+                            val2_compressed.append(np.round(stats.trim_mean(lines[3][start_index:end_index], 0.1), 2))
+                            val2_std_dev.append(np.round(np.std(lines[3][start_index:end_index]), 2))
 
-                            value3_compressed.append(np.round(stats.trim_mean(lines[4][start_index:end_index], 0.1), 2))
-                            value3_std_Dev.append(np.round(np.std(lines[4][start_index:end_index]), 2))
-                        if sensor_name == 'sg2_hrt' or sensor_name == 'sg2_ped':
-                            value4_compressed.append(np.round(stats.trim_mean(lines[5][start_index:end_index], 0.1), 2))
-                            value4_std_Dev.append(np.round(np.std(lines[5][start_index:end_index]), 2))
+                            val3_compressed.append(np.round(stats.trim_mean(lines[4][start_index:end_index], 0.1), 2))
+                            val3_std_dev.append(np.round(np.std(lines[4][start_index:end_index]), 2))
+                        if sensor_name in ['sg2_hrt', 'sg2_ped', 'sg2_bar']:
+                            val4_compressed.append(np.round(stats.trim_mean(lines[5][start_index:end_index], 0.1), 2))
+                            val4_std_dev.append(np.round(np.std(lines[5][start_index:end_index]), 2))
                         if sensor_name == 'sg2_ped':
-                            value5_compressed.append(np.round(stats.trim_mean(lines[6][start_index:end_index], 0.1), 2))
-                            value5_std_Dev.append(np.round(np.std(lines[6][start_index:end_index]), 2))
+                            val5_compressed.append(np.round(stats.trim_mean(lines[6][start_index:end_index], 0.1), 2))
+                            val5_std_dev.append(np.round(np.std(lines[6][start_index:end_index]), 2))
 
-                            value6_compressed.append(np.round(stats.trim_mean(lines[7][start_index:end_index], 0.1), 2))
-                            value6_std_Dev.append(np.round(np.std(lines[7][start_index:end_index]), 2))
+                            val6_compressed.append(np.round(stats.trim_mean(lines[7][start_index:end_index], 0.1), 2))
+                            val6_std_dev.append(np.round(np.std(lines[7][start_index:end_index]), 2))
 
-                            value7_compressed.append(np.round(stats.trim_mean(lines[8][start_index:end_index], 0.1), 2))
-                            value7_std_Dev.append(np.round(np.std(lines[8][start_index:end_index]), 2))
+                            val7_compressed.append(np.round(stats.trim_mean(lines[8][start_index:end_index], 0.1), 2))
+                            val7_std_dev.append(np.round(np.std(lines[8][start_index:end_index]), 2))
 
-                            value8_compressed.append(np.round(stats.trim_mean(lines[9][start_index:end_index], 0.1), 2))
-                            value8_std_Dev.append(np.round(np.std(lines[9][start_index:end_index]), 2))
+                            val8_compressed.append(np.round(stats.trim_mean(lines[9][start_index:end_index], 0.1), 2))
+                            val8_std_dev.append(np.round(np.std(lines[9][start_index:end_index]), 2))
 
                         # update indices
                         if k < loops - 1:
@@ -158,61 +136,62 @@ def compress(file_name, output_dir='', file_path=''):
                         time_element = int(lastElement + 120)
                         if match_unix_stamp(time_element):
                             time_series_compressed.append(time_element)
-                            value1_compressed.append(np.round(stats.trim_mean(lines[2][end_index:], 0.1), 2))
-                            value1_std_Dev.append(np.round(np.std(lines[2][end_index:]), 2))
-                            if math.isnan(value1_compressed[-1]) or math.isnan(value1_std_Dev[-1]):
+                            val1_compressed.append(np.round(stats.trim_mean(lines[2][end_index:], 0.1), 2))
+                            val1_std_dev.append(np.round(np.std(lines[2][end_index:]), 2))
+                            if math.isnan(val1_compressed[-1]) or math.isnan(val1_std_dev[-1]):
                                 print("nan")
                             if sensor_name != 'sg2_ple':
-                                value2_compressed.append(np.round(stats.trim_mean(lines[3][end_index:], 0.1), 2))
-                                value2_std_Dev.append(np.round(np.std(lines[3][end_index:]), 2))
+                                val2_compressed.append(np.round(stats.trim_mean(lines[3][end_index:], 0.1), 2))
+                                val2_std_dev.append(np.round(np.std(lines[3][end_index:]), 2))
 
-                                value3_compressed.append(np.round(stats.trim_mean(lines[4][end_index:], 0.1), 2))
-                                value3_std_Dev.append(np.round(np.std(lines[4][end_index:]), 2))
-                            if sensor_name == 'sg2_hrt' or sensor_name == 'sg2_ped':
-                                value4_compressed.append(np.round(stats.trim_mean(lines[5][end_index:], 0.1), 2))
-                                value4_std_Dev.append(np.round(np.std(lines[5][end_index:]), 2))
+                                val3_compressed.append(np.round(stats.trim_mean(lines[4][end_index:], 0.1), 2))
+                                val3_std_dev.append(np.round(np.std(lines[4][end_index:]), 2))
+                            if sensor_name in ['sg2_hrt', 'sg2_ped', 'sg2_bar']:
+                                val4_compressed.append(np.round(stats.trim_mean(lines[5][end_index:], 0.1), 2))
+                                val4_std_dev.append(np.round(np.std(lines[5][end_index:]), 2))
 
                             if sensor_name == 'sg2_ped':
-                                value5_compressed.append(np.round(stats.trim_mean(lines[6][end_index:], 0.1), 2))
-                                value5_std_Dev.append(np.round(np.std(lines[6][end_index:]), 2))
+                                val5_compressed.append(np.round(stats.trim_mean(lines[6][end_index:], 0.1), 2))
+                                val5_std_dev.append(np.round(np.std(lines[6][end_index:]), 2))
 
-                                value6_compressed.append(np.round(stats.trim_mean(lines[7][end_index:], 0.1), 2))
-                                value6_std_Dev.append(np.round(np.std(lines[7][end_index:]), 2))
+                                val6_compressed.append(np.round(stats.trim_mean(lines[7][end_index:], 0.1), 2))
+                                val6_std_dev.append(np.round(np.std(lines[7][end_index:]), 2))
 
-                                value7_compressed.append(np.round(stats.trim_mean(lines[8][end_index:], 0.1), 2))
-                                value7_std_Dev.append(np.round(np.std(lines[8][end_index:]), 2))
+                                val7_compressed.append(np.round(stats.trim_mean(lines[8][end_index:], 0.1), 2))
+                                val7_std_dev.append(np.round(np.std(lines[8][end_index:]), 2))
 
-                                value8_compressed.append(np.round(stats.trim_mean(lines[9][end_index:], 0.1), 2))
-                                value8_std_Dev.append(np.round(np.std(lines[9][end_index:]), 2))
-
+                                val8_compressed.append(np.round(stats.trim_mean(lines[9][end_index:], 0.1), 2))
+                                val8_std_dev.append(np.round(np.std(lines[9][end_index:]), 2))
+                    # only write when there is data in the lists
                     if len(time_series_compressed) != 0:
                         writeListToFile(time_series_compressed, output, 'time_series:')
-                        writeListToFile(value1_compressed, output, '1:')
-                        writeListToFile(value1_std_Dev, output, 'value1_std_Dev:')
+                        writeListToFile(val1_compressed, output, '1:')
+                        writeListToFile(val1_std_dev, output, 'val1_std_dev:')
 
                         if sensor_name != 'sg2_ple':
-                            writeListToFile(value2_compressed, output, '2:')
-                            writeListToFile(value2_std_Dev, output, 'value2_std_Dev:')
+                            writeListToFile(val2_compressed, output, '2:')
+                            writeListToFile(val2_std_dev, output, 'val2_std_dev:')
 
-                            writeListToFile(value3_compressed, output, '3:')
-                            writeListToFile(value3_std_Dev, output, 'value3_std_Dev:')
-                        if sensor_name in ['sg2_hrt', 'sg2_ped']:
-                            writeListToFile(value4_compressed, output, '4:')
-                            writeListToFile(value4_std_Dev, output, 'value4_std_Dev:')
+                            writeListToFile(val3_compressed, output, '3:')
+                            writeListToFile(val3_std_dev, output, 'val3_std_dev:')
+                        if sensor_name in ['sg2_hrt', 'sg2_ped', 'sg2_bar']:
+                            writeListToFile(val4_compressed, output, '4:')
+                            writeListToFile(val4_std_dev, output, 'val4_std_dev:')
 
                         if sensor_name == 'sg2_ped':
-                            writeListToFile(value5_compressed, output, '5:')
-                            writeListToFile(value5_std_Dev, output, 'value5_std_Dev:')
+                            writeListToFile(val5_compressed, output, '5:')
+                            writeListToFile(val5_std_dev, output, 'val5_std_dev:')
 
-                            writeListToFile(value6_compressed, output, '6:')
-                            writeListToFile(value6_std_Dev, output, 'value6_std_Dev:')
+                            writeListToFile(val6_compressed, output, '6:')
+                            writeListToFile(val6_std_dev, output, 'val6_std_dev:')
 
-                            writeListToFile(value7_compressed, output, '7:')
-                            writeListToFile(value7_std_Dev, output, 'value7_std_Dev:')
+                            writeListToFile(val7_compressed, output, '7:')
+                            writeListToFile(val7_std_dev, output, 'val7_std_dev:')
 
-                            writeListToFile(value8_compressed, output, '8:')
-                            writeListToFile(value8_std_Dev, output, 'value8_std_Dev:')
+                            writeListToFile(val8_compressed, output, '8:')
+                            writeListToFile(val8_std_dev, output, 'val8_std_dev:')
                 output.close()
             window += components
+        infile.close()
         print(str(window) + ' read from ' + str(file_lines))
         print("compression finished for file " + file_name)

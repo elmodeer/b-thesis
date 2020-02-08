@@ -1,79 +1,216 @@
 import subprocess
 import pandas as pd
 import numpy as np
+import operator
+
 from re import split
 import re
-from fluffUtil import get_sensor_name, get_lines_to_read, get_values
+from fluffUtil import get_sensor_name, get_lines_to_read, get_values, match_unix_stamp
 
 
-def merge(df_collection, prefix):
-    # merge with the biggest df
-    df_lengths = []
-    for i in df_collection:
-        df_lengths.append(len(df_collection[i].index))
+def insert_line(df, dict):
+    df = df.append({'time': dict.get('time'),
+                    'accX': dict.get('accX'), 'accX_std': dict.get('accX_std'),
+                    'accY': dict.get('accY'), 'accY_std': dict.get('accY_std'),
+                    'accZ': dict.get('accZ'), 'accZ_std': dict.get('accZ_std'),
 
-    biggest_index = df_lengths.index(max(df_lengths))
-    df = df_collection[biggest_index]
-    complete_df = pd.DataFrame(columns=['time', prefix + '_' + 'accX', 'accX_std',
-                                                prefix + '_' + 'accY', 'accY_std',
-                                                prefix + '_' + 'accZ', 'accZ_std',
-                                                prefix + '_' + 'gyrX', 'gyrX_std',
-                                                prefix + '_' + 'gyrY', 'gyrY_std',
-                                                prefix + '_' + 'gyrZ', 'gyrZ_std',
-                                                prefix + '_' + 'heartR', 'heartR_std',
-                                                prefix + '_' + 'h1', 'h1_std',
-                                                prefix + '_' + 'h2', 'h2_std',
-                                                prefix + '_' + 'h3', 'h3_std',
-                                                prefix + '_' + 'steps', 'steps_std',
-                                                prefix + '_' + 'WalkingSteps', 'W_St_std',
-                                                prefix + '_' + 'RunningSteps', 'RS_std',
-                                                prefix + '_' + 'MovingDistance', 'MD_std',
-                                                prefix + '_' + 'CaloriesBurned', 'CB_std',
-                                                prefix + '_' + 'LastSpeed', 'LS_std',
-                                                prefix + '_' + 'LastSteppingFrequency', 'LSF_std',
-                                                prefix + '_' + 'LastPedestrianState', 'LPS_std',
-                                                prefix + '_' + 'Latitude',
-                                                prefix + '_' + 'Longitude',
-                                                prefix + '_' + 'Altitude',
-                                                prefix + '_' + 'Speed',
-                                                prefix + '_' + 'Direction',
-                                                prefix + '_' + 'Climb',
-                                                prefix + '_' + 'Error',
-                                                prefix + '_' + 'MeasuringTime',
-                                                prefix + '_' + 'AccuracyLevel',
-                                                prefix + '_' + 'HorizontalAccuracy',
-                                                prefix + '_' + 'VerticalAccuracy'])
+                    'gyrX': dict.get('gyrX'), 'gyrX_std': dict.get('gyrX_std'),
+                    'gyrY': dict.get('gyrY'), 'gyrY_std': dict.get('gyrY_std'),
+                    'gyrZ': dict.get('gyrZ'), 'gyrZ_std': dict.get('gyrZ_std'),
 
-    # remove this df
-    del df_collection[biggest_index]
+                    'heartR': dict.get('heartR'), 'heartR_std': dict.get('heartR_std'),
 
-    # start merging
-    for i in range(len(df_lengths)):
-        df_2 = df_collection[i]
-        df_2_length = len(df_2.index)
-        for index, row in df.iterrows():
-            while index < df_2_length:
-                row_df = df.iloc[index]
-                row_df_2 = df_2.iloc[index]
-                time_diff = row_df['time'] - row_df_2['time']
+                    'SmoothedAirPressure': dict.get('SmoothedAirPressure'), 'SAP_std': dict.get('SAP_std'),
+                    'UncalibratedBarometerAltitude': dict.get('UncalibratedBarometerAltitude'),
+                    'UBA_std': dict.get('UBA_std'),
+                    'AirTemperature': dict.get('AirTemperature'), 'AT_std': dict.get('AT_std'),
+                    'AirPressure': dict.get('AirPressure'), 'AP_std': dict.get('AP_std'),
 
-                if 120 < time_diff < 240:
-                    pass
-                elif time_diff < 120:
-                    pass
-                elif time_diff > 240:
-                    pass
-                else:
-                    pass
+                    'PlethysmogramGreen': dict.get('PlethysmogramGreen'), 'ple_std': dict.get('ple_std'),
 
-                # do some shit
+                    'steps': dict.get('steps'), 'steps_std': dict.get('steps_std'),
+                    'WalkingSteps': dict.get('WalkingSteps'), 'W_St_std': dict.get('W_St_std'),
+                    'RunningSteps': dict.get('RunningSteps'), 'RS_std': dict.get('RS_std'),
+                    'CaloriesBurned': dict.get('CaloriesBurned'), 'CB_std': dict.get('CB_std'),
+
+                    'Latitude': dict.get('Latitude'),
+                    'Longitude': dict.get('Longitude'),
+                    }, ignore_index=True)
 
     return df
 
 
+def get_next_earliest(df_collection):
+    # get earliest data frame
+    temp_dict = {}
+    for key in df_collection:
+        if len(df_collection[key]) != 0:
+            temp_dict[key] = df_collection[key]['time'].iloc[0]
+    if len(temp_dict) != 0:
+        earliest_key = min(temp_dict, key=temp_dict.get)
+    else:
+        return 0, 'none'
+    earliest_time = df_collection[earliest_key]['time'].iloc[0]
+    return earliest_time, earliest_key
+
+
+def get_latest(df_collection):
+    temp_dict = {}
+    for key in df_collection:
+        if len(df_collection[key]) != 0:
+            temp_dict[key] = df_collection[key]['time'].iloc[-1]
+    if len(temp_dict) != 0:
+        latest_key = max(temp_dict, key=temp_dict.get)
+    else:
+        return 0, 'none'
+    latest_time = df_collection[latest_key]['time'].iloc[0]
+    return latest_time, latest_key
+
+
+def df_collection_is_not_empty(df_collection):
+    for key in df_collection:
+        if len(df_collection[key]) != 0:
+            return True
+        else:
+            continue
+    return False
+
+
+def merge(df_collection):
+    complete_df = pd.DataFrame(columns=['time',
+                                        # acc
+                                        'accX', 'accX_std',
+                                        'accY', 'accY_std',
+                                        'accZ', 'accZ_std',
+
+                                        'gyrX', 'gyrX_std',
+                                        'gyrY', 'gyrY_std',
+                                        'gyrZ', 'gyrZ_std',
+
+                                        'heartR', 'heartR_std',
+
+                                        'SmoothedAirPressure', 'SAP_std',
+                                        'UncalibratedBarometerAltitude', 'UBA_std',
+                                        'AirTemperature', 'AT_std',
+                                        'AirPressure', 'AP_std',
+
+                                        'PlethysmogramGreen', 'ple_std',
+
+                                        'steps', 'steps_std',
+                                        'WalkingSteps', 'W_St_std',
+                                        'RunningSteps', 'RS_std',
+                                        'CaloriesBurned', 'CB_std',
+
+                                        'Latitude',
+                                        'Longitude'])
+
+    # start two minutes aggregating
+    earliest_time, key = get_next_earliest(df_collection)
+    # latest_time, l_key = get_latest(df_collection)
+    while df_collection_is_not_empty(df_collection):
+        merging_keys = []
+        limit = earliest_time + 61
+        for key in df_collection:
+            if len(df_collection[key]) != 0:
+                if df_collection[key]['time'].iloc[0] <= limit:
+                    merging_keys.append(key)
+        # combine new row
+        temp_dict = {'time': earliest_time}
+        for key in merging_keys:
+            if key == 'sg2_bar':
+                if len(df_collection[key].index) != 0:
+                    temp_dict['SmoothedAirPressure'] = df_collection[key]['SmoothedAirPressure'].iloc[0]
+                    temp_dict['UncalibratedBarometerAltitude'] = \
+                    df_collection[key]['UncalibratedBarometerAltitude'].iloc[0]
+                    temp_dict['AirTemperature'] = df_collection[key]['AirTemperature'].iloc[0]
+                    temp_dict['AirPressure'] = df_collection[key]['AirPressure'].iloc[0]
+                    temp_dict['SAP_std'] = df_collection[key]['SAP_std'].iloc[0]
+                    temp_dict['UBA_std'] = df_collection[key]['UBA_std'].iloc[0]
+                    temp_dict['AT_std'] = df_collection[key]['AT_std'].iloc[0]
+                    temp_dict['AP_std'] = df_collection[key]['AP_std'].iloc[0]
+                    # drop this row
+                    df_collection[key] = df_collection[key].iloc[1:]
+                else:
+                    del df_collection[key]
+            if key == 'sg2_gps':
+                if len(df_collection[key].index) != 0:
+                    temp_dict['Latitude'] = df_collection[key]['Latitude'].iloc[0]
+                    temp_dict['Longitude'] = df_collection[key]['Longitude'].iloc[0]
+                    # drop this row
+                    df_collection[key] = df_collection[key].iloc[1:]
+                else:
+                    del df_collection[key]
+            if key == 'sg2_acc':
+                if len(df_collection[key].index) != 0:
+                    temp_dict['accX'] = df_collection[key]['X'].iloc[0]
+                    temp_dict['accY'] = df_collection[key]['Y'].iloc[0]
+                    temp_dict['accZ'] = df_collection[key]['Z'].iloc[0]
+                    temp_dict['accX_std'] = df_collection[key]['x_std'].iloc[0]
+                    temp_dict['accY_std'] = df_collection[key]['y_std'].iloc[0]
+                    temp_dict['accZ_std'] = df_collection[key]['y_std'].iloc[0]
+                    # drop this row
+                    df_collection[key] = df_collection[key].iloc[1:]
+                else:
+                    del df_collection[key]
+            if key == 'sg2_ple':
+                if len(df_collection[key].index) != 0:
+                    temp_dict['PlethysmogramGreen'] = df_collection[key]['PlethysmogramGreen'].iloc[0]
+                    temp_dict['ple_std'] = df_collection[key]['ple_std'].iloc[0]
+                    # drop this row
+                    df_collection[key] = df_collection[key].iloc[1:]
+                else:
+                    del df_collection[key]
+            if key == 'sg2_ped':
+                if len(df_collection[key].index) != 0:
+                    temp_dict['steps'] = df_collection[key]['steps'].iloc[0]
+                    temp_dict['WalkingSteps'] = df_collection[key]['WalkingSteps'].iloc[0]
+                    temp_dict['RunningSteps'] = df_collection[key]['RunningSteps'].iloc[0]
+                    temp_dict['CaloriesBurned'] = df_collection[key]['CaloriesBurned'].iloc[0]
+                    temp_dict['steps_std'] = df_collection[key]['steps_std'].iloc[0]
+                    temp_dict['W_St_std'] = df_collection[key]['W_St_std'].iloc[0]
+                    temp_dict['RS_std'] = df_collection[key]['RS_std'].iloc[0]
+                    temp_dict['CB_std'] = df_collection[key]['CB_std'].iloc[0]
+                    df_collection[key] = df_collection[key].iloc[1:]
+                else:
+                    del df_collection[key]
+            if key == 'sg2_hrt':
+                if len(df_collection[key].index) != 0:
+                    temp_dict['heartR'] = df_collection[key]['heartR'].iloc[0]
+                    temp_dict['heartR_std'] = df_collection[key]['heartR_std'].iloc[0]
+                    df_collection[key] = df_collection[key].iloc[1:]
+                else:
+                    del df_collection[key]
+            if key == 'sg2_gyr':
+                if len(df_collection[key].index) != 0:
+                    temp_dict['gyrX'] = df_collection[key]['X'].iloc[0]
+                    temp_dict['gyrY'] = df_collection[key]['Y'].iloc[0]
+                    temp_dict['gyrZ'] = df_collection[key]['Z'].iloc[0]
+                    temp_dict['gyrX_std'] = df_collection[key]['x_std'].iloc[0]
+                    temp_dict['gyrY_std'] = df_collection[key]['y_std'].iloc[0]
+                    temp_dict['gyrZ_std'] = df_collection[key]['z_std'].iloc[0]
+                    df_collection[key] = df_collection[key].iloc[1:]
+                else:
+                    del df_collection[key]
+        # earliest_time = df_collection[earliest_key]['time'].iloc[0]
+        earliest_time, key = get_next_earliest(df_collection)
+        if not complete_df.empty:
+            if earliest_time == complete_df['time'].iloc[-1]:
+                print('Duplicated entry. ERROR ERROR ERROR ERROR ERROR ERROR ERROR ERROR')
+                continue
+        print(str(earliest_time) + ' from ' + key)
+        # if match_unix_stamp(earliest_time):
+        complete_df = insert_line(complete_df, temp_dict)
+        # else:
+        #     print(str(earliest_time) + ' from ' + key)
+        #     print('Time stamp does not match unix time pattern. stopping here')
+        #     return complete_df
+        # raise ValueError('Time stamp does not match unix time pattern.')
+    # print('latest' + str(latest_time) + 'from ' + key)
+    return complete_df
+
+
 def to_csv(files, prefix, file_path=''):
     df_collection = {}
-    index = 0
     for file_name in files:
 
         # get sensor name
@@ -88,10 +225,19 @@ def to_csv(files, prefix, file_path=''):
             window = 0
             timeAll = []
 
-            all_1, all_2, all_3, all_4, all_5, all_6, all_7, all_8, all_9, all_10, all_11, all_12 = []
-            all_1_std, all_2_std, all_3_std, all_4_std, all_5_std, all_6_std = []
-            all_7_std, all_8_std, all_9_std, all_10_std, all_11_std, all_12_std = []
+            all_1 = []
+            all_1_std = []
 
+            all_2 = []
+            all_2_std = []
+
+            all_3 = []
+            all_3_std = []
+
+            all_4 = []
+            all_4_std = []
+
+            print(file_name)
             while window < fileLines:
                 file_lines = []
                 for i in range(lines_per_iteration):
@@ -100,36 +246,21 @@ def to_csv(files, prefix, file_path=''):
                 timeAll.extend(file_lines[0])
                 all_1.extend(file_lines[1])
                 all_1_std.extend((file_lines[2]))
+                # special case
                 if sensor_name == 'sg2_gps':
                     all_2.extend(file_lines[2])
                     all_3.extend(file_lines[3])
-                    all_4.extend(file_lines[4])
-                    all_5.extend(file_lines[5])
-                    all_6.extend(file_lines[6])
-                    all_7.extend(file_lines[7])
-                    all_8.extend(file_lines[8])
-                    all_9.extend(file_lines[9])
-                    all_10.extend(file_lines[10])
-                    all_11.extend(file_lines[11])
-                    all_12.extend(file_lines[12])
+                    window += lines_per_iteration
+                    continue
 
-                elif sensor_name != 'sg2_ple':
+                if sensor_name in ['sg2_gyr', 'sg2_bar', 'sg2_acc', 'sg2_ped']:
                     all_2.extend(file_lines[3])
                     all_2_std.extend(file_lines[4])
                     all_3.extend(file_lines[5])
                     all_3_std.extend(file_lines[6])
-                elif sensor_name in ['sg2_hrt', 'sg2_ped']:
+                if sensor_name in ['sg2_bar', 'sg2_ped', 'sg2_bar']:
                     all_4.extend(file_lines[7])
                     all_4_std.extend(file_lines[8])
-                elif sensor_name == 'sg2_ped':
-                    all_5.extend(file_lines[9])
-                    all_5_std.extend(file_lines[10])
-                    all_6.extend(file_lines[11])
-                    all_6_std.extend(file_lines[12])
-                    all_7.extend(file_lines[13])
-                    all_7_std.extend(file_lines[14])
-                    all_8.extend(file_lines[15])
-                    all_8_std.extend(file_lines[16])
 
                 # print(window)
                 window += lines_per_iteration
@@ -140,71 +271,60 @@ def to_csv(files, prefix, file_path=''):
                                                    all_2, all_2_std,
                                                    all_3, all_3_std]),
                                   columns=['time',
-                                           prefix + '_' + sensor_name + 'X', 'x_std',
-                                           prefix + '_' + sensor_name + 'Y', 'y_std',
-                                           prefix + '_' + sensor_name + 'Z', 'z_std'])
+                                           'X', 'x_std',
+                                           'Y', 'y_std',
+                                           'Z', 'z_std'])
 
             elif sensor_name == 'sg2_hrt':
                 df = pd.DataFrame(np.column_stack([timeAll,
-                                                   all_1, all_1_std,
-                                                   all_2, all_2_std,
-                                                   all_3, all_3_std,
-                                                   all_4, all_4_std]),
+                                                   all_1, all_1_std]),
                                   columns=['time',
-                                           prefix + '_' + sensor_name + '_' + 'HeartRate', 'hr_std',
-                                           prefix + '_' + sensor_name + '_' + '2', '2_std',
-                                           prefix + '_' + sensor_name + '_' + '3', '3_std',
-                                           prefix + '_' + sensor_name + '_' + '4', '4_std'])
+                                           'heartR', 'heartR_std'])
+                indexNames = df[(df['heartR'] < 50) & df['heartR'] > 120].index
+                df.drop(indexNames, inplace=True)
+            elif sensor_name == 'sg2_bar':
+                df = pd.DataFrame(np.column_stack([timeAll,
+                                           all_1, all_1_std,
+                                           all_2, all_2_std,
+                                           all_3, all_3_std,
+                                           all_4, all_4_std]),
+                                  columns=['time',
+                                           'SmoothedAirPressure', 'SAP_std',
+                                           'UncalibratedBarometerAltitude', 'UBA_std',
+                                           'AirTemperature', 'AT_std',
+                                           'AirPressure', 'AP_std'])
             elif sensor_name == 'sg2_ped':
                 df = pd.DataFrame(np.column_stack([timeAll,
-                                                   all_1, all_1_std,
-                                                   all_2, all_2_std,
-                                                   all_3, all_3_std,
-                                                   all_4, all_4_std,
-                                                   all_5, all_5_std,
-                                                   all_6, all_6_std,
-                                                   all_7, all_7_std,
-                                                   all_8, all_8_std]),
+                                           all_1, all_1_std,
+                                           all_2, all_2_std,
+                                           all_3, all_3_std,
+                                           all_4, all_4_std]),
                                   columns=['time',
-                                           prefix + '_' + sensor_name + '_' + 'steps', 'steps_std',
-                                           prefix + '_' + sensor_name + '_' + 'WalkingSteps', 'W_St_std',
-                                           prefix + '_' + sensor_name + '_' + 'RunningSteps', 'RS_std',
-                                           prefix + '_' + sensor_name + '_' + 'MovingDistance', 'MD_std',
-                                           prefix + '_' + sensor_name + '_' + 'CaloriesBurned', 'CB_std',
-                                           prefix + '_' + sensor_name + '_' + 'LastSpeed', 'LS_std',
-                                           prefix + '_' + sensor_name + '_' + 'LastSteppingFrequency', 'LSF_std',
-                                           prefix + '_' + sensor_name + '_' + 'LastPedestrianState', 'LPS_std'])
+                                           'steps', 'steps_std',
+                                           'WalkingSteps', 'W_St_std',
+                                           'RunningSteps', 'RS_std',
+                                           'CaloriesBurned', 'CB_std'])
             elif sensor_name == 'sg2_gps':
-                df = pd.DataFrame(np.column_stack([timeAll,
-                                                   all_1, all_2,
-                                                   all_3, all_4,
-                                                   all_5, all_6,
-                                                   all_7, all_8,
-                                                   all_9, all_10,
-                                                   all_11, all_12]),
+                df = pd.DataFrame(np.column_stack([timeAll, all_1, all_2]),
                                   columns=['time',
-                                           prefix + '_' + sensor_name + '_' + 'Latitude',
-                                           prefix + '_' + sensor_name + '_' + 'Longitude',
-                                           prefix + '_' + sensor_name + '_' + 'Altitude',
-                                           prefix + '_' + sensor_name + '_' + 'Speed',
-                                           prefix + '_' + sensor_name + '_' + 'Direction',
-                                           prefix + '_' + sensor_name + '_' + 'Climb',
-                                           prefix + '_' + sensor_name + '_' + 'Error',
-                                           prefix + '_' + sensor_name + '_' + 'MeasuringTime',
-                                           prefix + '_' + sensor_name + '_' + 'AccuracyLevel',
-                                           prefix + '_' + sensor_name + '_' + 'HorizontalAccuracy',
-                                           prefix + '_' + sensor_name + '_' + 'VerticalAccuracy'])
+                                           'Latitude', 'Longitude'])
+                df = df[df['Latitude'] != 0]
             # when sg2_ple
             else:
                 df = pd.DataFrame(np.column_stack([timeAll,
                                                    all_1, all_1_std]),
                                   columns=['time',
-                                           sensor_name + '_' + 'PlethysmogramGreen', 'ple_std'])
+                                           'PlethysmogramGreen', 'ple_std'])
 
             df.sort_values('time', inplace=True)
-            df_collection[index] = df
-            index += 1
+            df_collection[sensor_name] = df
+            # index += 1
             file.close()
     # merge data frames:
-    all_df = merge(df_collection, prefix)
+    all_df = merge(df_collection)
+    for key in df_collection:
+        print(key + ': ')
+        print(len(df_collection[key]))
+
+    all_df.to_csv(prefix + '.csv', index=False)
     print("here")

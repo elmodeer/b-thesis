@@ -23,7 +23,7 @@ def get_values(argument, ints=False):
     if len(temp) == 2:
         if temp[0].strip() == 'time_series':
             ints = True
-        values = temp[1].strip(' []\n')
+        values = temp[1].strip(' []\n,')
         if len(values) > 1:
             if ints:
                 return [int(x) for x in values.split(',')]
@@ -60,7 +60,8 @@ def get_components(s_type):
         'sg2_ple': 3,
         'sg2_ped': 10,
         'sg2_bar': 6,
-        'sg2_gps': 13
+        # exception: just the sensor components
+        'sg2_gps': 12
 
     }
     return switcher.get(s_type, -1)
@@ -75,8 +76,8 @@ def match_unix_stamp(unix_stamp):
 
 
 def writeListToFile(argument, file, name):
-    argument = map(str, argument)
-
+    # argument = map(str, argument)
+    argument = str(argument).strip('[]')
     file.write(name)
     file.writelines(argument)
     file.write('\n')
@@ -87,3 +88,8 @@ def get_sensor_name(file_name):
     start_index = file_name.find('sg2')
     end_index = start_index + sensor_name_length
     return file_name[start_index:end_index]
+
+
+def draw_progress(length, progress, steps=20):
+    if progress > length/steps:
+        print('-', end='')
