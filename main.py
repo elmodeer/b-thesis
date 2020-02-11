@@ -1,6 +1,6 @@
 from sensorSeparator import separate
 from fileCompressor import compress
-from csvCreator import to_csv
+from csvCreator import features_to_csv
 from os import getcwd, listdir
 from os.path import isfile, join
 
@@ -51,8 +51,8 @@ if (len(compressed_files_x) + len(compressed_files_y)) != len(labels) * 2:
     print('files are not compressed correctly')
 else:
     print('compression sounds nice')
-    to_csv(compressed_files_x, prefix_1, file_path=out_put_path)
-    # to_csv(compressed_files_y, prefix_2, file_path=out_put_path)
+    # features_to_csv(compressed_files_x, prefix_1, file_path=out_put_path)
+    # features_to_csv(compressed_files_y, prefix_2, file_path=out_put_path)
     # for f in compressed_files:
     #     print('starting ' + f)
     #     to_csv(f, file_path=out_put_path)

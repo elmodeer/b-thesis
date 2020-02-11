@@ -1,6 +1,8 @@
 import subprocess
 import pandas as pd
 import numpy as np
+from datetime import datetime
+import math
 import operator
 
 from re import split
@@ -120,8 +122,7 @@ def merge(df_collection):
             if key == 'sg2_bar':
                 if len(df_collection[key].index) != 0:
                     temp_dict['SmoothedAirPressure'] = df_collection[key]['SmoothedAirPressure'].iloc[0]
-                    temp_dict['UncalibratedBarometerAltitude'] = \
-                    df_collection[key]['UncalibratedBarometerAltitude'].iloc[0]
+                    temp_dict['UncalibratedBarometerAltitude'] = df_collection[key]['UncalibratedBarometerAltitude'].iloc[0]
                     temp_dict['AirTemperature'] = df_collection[key]['AirTemperature'].iloc[0]
                     temp_dict['AirPressure'] = df_collection[key]['AirPressure'].iloc[0]
                     temp_dict['SAP_std'] = df_collection[key]['SAP_std'].iloc[0]
@@ -209,7 +210,7 @@ def merge(df_collection):
     return complete_df
 
 
-def to_csv(files, prefix, file_path=''):
+def features_to_csv(files, prefix, file_path=''):
     df_collection = {}
     for file_name in files:
 
@@ -280,14 +281,15 @@ def to_csv(files, prefix, file_path=''):
                                                    all_1, all_1_std]),
                                   columns=['time',
                                            'heartR', 'heartR_std'])
-                indexNames = df[(df['heartR'] < 50) & df['heartR'] > 120].index
+                indexNames = df[(df['heartR'] < 50)].index
                 df.drop(indexNames, inplace=True)
+
             elif sensor_name == 'sg2_bar':
                 df = pd.DataFrame(np.column_stack([timeAll,
-                                           all_1, all_1_std,
-                                           all_2, all_2_std,
-                                           all_3, all_3_std,
-                                           all_4, all_4_std]),
+                                                   all_1, all_1_std,
+                                                   all_2, all_2_std,
+                                                   all_3, all_3_std,
+                                                   all_4, all_4_std]),
                                   columns=['time',
                                            'SmoothedAirPressure', 'SAP_std',
                                            'UncalibratedBarometerAltitude', 'UBA_std',
@@ -295,10 +297,10 @@ def to_csv(files, prefix, file_path=''):
                                            'AirPressure', 'AP_std'])
             elif sensor_name == 'sg2_ped':
                 df = pd.DataFrame(np.column_stack([timeAll,
-                                           all_1, all_1_std,
-                                           all_2, all_2_std,
-                                           all_3, all_3_std,
-                                           all_4, all_4_std]),
+                                                   all_1, all_1_std,
+                                                   all_2, all_2_std,
+                                                   all_3, all_3_std,
+                                                   all_4, all_4_std]),
                                   columns=['time',
                                            'steps', 'steps_std',
                                            'WalkingSteps', 'W_St_std',
@@ -322,9 +324,89 @@ def to_csv(files, prefix, file_path=''):
             file.close()
     # merge data frames:
     all_df = merge(df_collection)
-    for key in df_collection:
-        print(key + ': ')
-        print(len(df_collection[key]))
-
     all_df.to_csv(prefix + '.csv', index=False)
-    print("here")
+
+
+def compare_string_dates(date1, date2):
+    """
+    compare two dates of type String of format dd.mm.yy
+    :param date1: first date
+    :param date2: second date
+    :return: 1 if date1 > date2 and 0 if equal and -1 if otherwise
+    """
+    components1 = list(map(int, date1.split('.')))
+    components2 = list(map(int, date2.split('.')))
+
+    if components1[2] == components2[2]:
+        if components1[1] == components2[1]:
+            if components1[0] > components2[0]:
+                return 1
+            elif components1[0] == components2[0]:
+                return 0
+            else:
+                return -1
+        elif components1[1] > components2[1]:
+            return 1
+        else:
+            return -1
+    elif components1[2] > components2[2]:
+        return 1
+    else:
+        return -1
+
+
+def get_readable_date(date):
+    # Y for XXXX and y for XX
+    # %H:%M:%S for more precision
+    return datetime.utcfromtimestamp(date).strftime('%d.%m.%y')
+
+
+def fill_missing_range(result, features, missing_date, index):
+
+    while index < len(features.index) and get_readable_date(features['time'].iloc[index]) == missing_date:
+        result = result.append(pd.Series(), ignore_index=True)
+        index += 1
+
+    return index, result
+
+
+def labels_contain_this_date(labels, date):
+    for i, row in labels.iterrows():
+        if row['date'] == date:
+            return True
+    return False
+
+
+def combine_features_and_labels(features, labels):
+    # 2- get earliest labels and discard earlier features
+    # 3- get latest labels and discard later features
+    result = pd.DataFrame(columns=['date', 'alc', 'mood', 'tense',
+                                   'tired', 'period', 'rumination', 'socialize', 'socialize_val',
+                                   'sport_time', 'work_time', 'phq_1', 'phq_2'])
+
+    j = 0
+    i = 0
+    f_length = len(features.index)
+    l_length = len(labels.index)
+    # for i, row in features.iterrows():
+    while i < f_length:
+        date = get_readable_date(features['time'].iloc[i])
+        label_row = labels.iloc[j]
+        if date == label_row['date']:
+            result = result.append({'date': label_row['date'], 'alc': label_row['alc'],
+                                    'mood': label_row['mood'], 'tense': label_row['tense'], 'tired': label_row['tired'],
+                                    'period': label_row['period'],
+                                    'rumination': label_row['rumination'], 'socialize': label_row['socialize'],
+                                    'socialize_val': label_row['socialize_val'],
+                                    'sport_time': label_row['sport_time'], 'work_time': label_row['work_time'],
+                                    'phq_1': label_row['phq_1'], 'phq_2': label_row['phq_2']}, ignore_index=True)
+            i += 1
+        elif not labels_contain_this_date(labels, date):
+            i, result = fill_missing_range(result, features, date, i)
+        else:
+            print('at index ' + str(j) + ' of ' + str(l_length) + ' and index ' + str(i) + ' of ' + str(f_length))
+            if (j + 1) < l_length:
+                j += 1
+    print(j)
+    print(len(features.index))
+    result.to_csv('final.csv', index=False)
