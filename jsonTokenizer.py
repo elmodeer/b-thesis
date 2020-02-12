@@ -6,13 +6,13 @@ import pandas as pd
 
 def insert_line(df, date=None, job=None, l_sit=None, age=None, alc=None, cig=None, mood=None, tense=None,
                 tired=None, period=None, rumination=None, socialize=None, socialize_val=None,
-                sport_time=None, work_time=None, phq_1=None, phq_2=None):
+                sport_time=None, work_time=None, day_sleep=None, phq_1=None, phq_2=None):
     df = df.append({'date': date,'job': job, 'l_sit': l_sit,
                     'age': age, 'alc': alc, 'cig': cig,
                     'mood': mood, 'tense': tense, 'tired': tired, 'period': period,
                     'rumination': rumination, 'socialize': socialize, 'socialize_val': socialize_val,
                     'sport_time': sport_time, 'work_time': work_time,
-                    'phq_1': phq_1, 'phq_2': phq_2}, ignore_index=True)
+                    'day_sleep': day_sleep, 'phq_1': phq_1, 'phq_2': phq_2}, ignore_index=True)
 
     return df
 
@@ -22,20 +22,22 @@ def get_date(param):
     return parts[2] + '.' + parts[1] + '.' + parts[0][2:]
 
 
-def get_labels(files, input_path, extended_features=False):
+def evening_protocols_to_csv(input_path, result_path, patient_name, extended_features=False):
+    files = [f for f in listdir(input_path) if isfile(join(input_path, f))
+             & ('EVENING' in f)
+             & f.endswith('.json')]
     files.sort()
-
     complete_df = pd.DataFrame(columns=['date', 'job', 'l_sit', 'age', 'alc', 'cig', 'mood', 'tense',
                                         'tired', 'period', 'rumination', 'socialize', 'socialize_val',
-                                        'sport_time', 'work_time', 'phq_1', 'phq_2'])
+                                        'sport_time', 'work_time', 'day_sleep', 'phq_1', 'phq_2'])
     for file in files:
         print(file)
         with open(input_path + '/' + file, 'rt') as evening_protocol:
-            # content = evening_protocol.read()
-            # content = content.replace("\'", "\"")
-            # content = content.replace("\"contents\": \"{", "\"contents\": {")
-            # content = content.replace("}\"", "}")
-            json_content = json.load(evening_protocol)
+            content = evening_protocol.read()
+            content = content.replace("\'", "\"")
+            content = content.replace("\"contents\": \"{", "\"contents\": {")
+            content = content.replace("}\"", "}")
+            json_content = json.loads(content)
             # extracting features
             data = json_content['contents']
             profile = data['profile']
@@ -65,19 +67,13 @@ def get_labels(files, input_path, extended_features=False):
                 socialize_val = data['socialize_val']
                 sport_time = data['sport']['time']
                 work_time = data['work']['time']
+                day_sleep = data['daySleep']['DS_TST']
 
                 complete_df = insert_line(complete_df, date, job, living_situation, age, alc, cig, mood, tense,
                                           tired, period, rumination, socialize, socialize_val, sport_time, work_time,
-                                          phq_1, phq_2)
+                                          day_sleep, phq_1, phq_2)
             else:
                 complete_df = insert_line(complete_df, phq_1, phq_2)
 
             evening_protocol.close()
-    return complete_df
-
-
-patient = 'ST-1441993385'
-my_path = '/Users/Hesham/dev/fluffDecoder/' + patient
-all_files = [f for f in listdir(my_path) if isfile(join(my_path, f)) & f.endswith('.json')]
-co_df = get_labels(all_files, my_path, extended_features=True)
-co_df.to_csv('labels.csv', index=False)
+    complete_df.to_csv(result_path + '/' + patient_name + '_evening_protocols.csv', index=False)

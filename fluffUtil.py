@@ -7,10 +7,10 @@ def get_lines_to_read(s_type):
     # structure is unix timeStamp + time offsets + (sensor components * 2) cause we add std-dev for each component
     switcher = {
         'sg2_acc': 7,
-        'sg2_hrt': 9,
+        'sg2_hrt': 3,
         'sg2_gyr': 7,
         'sg2_ple': 3,
-        'sg2_ped': 17,
+        'sg2_ped': 9,
         'sg2_bar': 9,
         # exception: just the sensor components
         'sg2_gps': 12
@@ -37,17 +37,20 @@ def get_values(argument, ints=False):
 
 def get_lines(in_file, components):
     lines = []
+
     for i in range(components):
         # parsing unix time stamp
-        if i == 0:
-            lines.append(int(in_file.readline()))
-            continue
-        # parsing time offsets
-        if i == 1:
-            lines.append(get_values(in_file.readline(), ints=True))
-            continue
-        # parsing normal sensor values
-        lines.append(get_values(in_file.readline()))
+        new_line = in_file.readline()
+        if len(new_line) != 0:
+            if i == 0:
+                lines.append(int(new_line))
+                continue
+            # parsing time offsets
+            if i == 1:
+                lines.append(get_values(new_line, ints=True))
+                continue
+            # parsing normal sensor values
+            lines.append(get_values(new_line))
     return lines
 
 
@@ -89,7 +92,3 @@ def get_sensor_name(file_name):
     end_index = start_index + sensor_name_length
     return file_name[start_index:end_index]
 
-
-def draw_progress(length, progress, steps=20):
-    if progress > length/steps:
-        print('-', end='')

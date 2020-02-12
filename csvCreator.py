@@ -199,14 +199,7 @@ def merge(df_collection):
                 print('Duplicated entry. ERROR ERROR ERROR ERROR ERROR ERROR ERROR ERROR')
                 continue
         print(str(earliest_time) + ' from ' + key)
-        # if match_unix_stamp(earliest_time):
         complete_df = insert_line(complete_df, temp_dict)
-        # else:
-        #     print(str(earliest_time) + ' from ' + key)
-        #     print('Time stamp does not match unix time pattern. stopping here')
-        #     return complete_df
-        # raise ValueError('Time stamp does not match unix time pattern.')
-    # print('latest' + str(latest_time) + 'from ' + key)
     return complete_df
 
 
@@ -281,7 +274,7 @@ def features_to_csv(files, prefix, file_path=''):
                                                    all_1, all_1_std]),
                                   columns=['time',
                                            'heartR', 'heartR_std'])
-                indexNames = df[(df['heartR'] < 50)].index
+                indexNames = df[(df['heartR'] < 30)].index
                 df.drop(indexNames, inplace=True)
 
             elif sensor_name == 'sg2_bar':
@@ -318,13 +311,12 @@ def features_to_csv(files, prefix, file_path=''):
                                   columns=['time',
                                            'PlethysmogramGreen', 'ple_std'])
 
-            df.sort_values('time', inplace=True)
+            df = df.sort_values('time')
             df_collection[sensor_name] = df
-            # index += 1
             file.close()
     # merge data frames:
     all_df = merge(df_collection)
-    all_df.to_csv(prefix + '.csv', index=False)
+    all_df.to_csv(file_path + '/' + prefix + '.csv', index=False)
 
 
 def compare_string_dates(date1, date2):
@@ -362,7 +354,6 @@ def get_readable_date(date):
 
 
 def fill_missing_range(result, features, missing_date, index):
-
     while index < len(features.index) and get_readable_date(features['time'].iloc[index]) == missing_date:
         result = result.append(pd.Series(), ignore_index=True)
         index += 1
@@ -378,8 +369,6 @@ def labels_contain_this_date(labels, date):
 
 
 def combine_features_and_labels(features, labels):
-    # 2- get earliest labels and discard earlier features
-    # 3- get latest labels and discard later features
     result = pd.DataFrame(columns=['date', 'alc', 'mood', 'tense',
                                    'tired', 'period', 'rumination', 'socialize', 'socialize_val',
                                    'sport_time', 'work_time', 'phq_1', 'phq_2'])
@@ -388,7 +377,9 @@ def combine_features_and_labels(features, labels):
     i = 0
     f_length = len(features.index)
     l_length = len(labels.index)
-    # for i, row in features.iterrows():
+    # 1- loop around the features data frame and accordingly copy the values of the evening protocols
+    # 2- missing dates in the ev_protocols are filled with null values to be discarded in a later step. this work around
+    # to help simplify the process of concatenating the two data frames.
     while i < f_length:
         date = get_readable_date(features['time'].iloc[i])
         label_row = labels.iloc[j]

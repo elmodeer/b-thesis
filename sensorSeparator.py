@@ -1,6 +1,4 @@
 import re
-from os import mkdir, getcwd
-
 
 def separate(path, files, prefix_1, prefix_2, output_dir, labels):
     """
@@ -11,16 +9,9 @@ def separate(path, files, prefix_1, prefix_2, output_dir, labels):
     :param prefix_2: night files prefix
     :param output_dir: patient code to create a directory with the same name
     :param labels: sensor names to separate
-    :return:
     """
     files.sort()
     print(len(files))
-    try:
-        # Create target Directory
-        mkdir(output_dir)
-        print("Directory ", output_dir, " Created ")
-    except FileExistsError:
-        print("Directory ", output_dir, " already exists")
 
     for fluff in files:
         print(fluff)
@@ -41,6 +32,9 @@ def separate(path, files, prefix_1, prefix_2, output_dir, labels):
         for line in x:
             elements = re.split(':', line)
             sensor_name = elements[0].strip()
+            if not sensor_name.startswith('sg2'):
+                # print('could not be right')
+                continue
             if sensor_name in labels:
                 output_name = output_dir + '/' + time + '_' + sensor_name
                 if sensor_name == 'sg2_gps':
@@ -49,9 +43,6 @@ def separate(path, files, prefix_1, prefix_2, output_dir, labels):
                     sensor = open(output_name + '.txt', 'a+')
                     if elements[1].strip() == 'uint64':
                         sensor.write(unixTime + '\n')
-                if not sensor_name.startswith('sg2'):
-                    print('could not be right')
-                    continue
                 sensor.write(elements[0] + ':' + elements[2])
                 sensor.write('\n')
                 sensor.close()
