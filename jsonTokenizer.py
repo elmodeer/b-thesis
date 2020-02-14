@@ -22,7 +22,7 @@ def get_date(param):
     return parts[2] + '.' + parts[1] + '.' + parts[0][2:]
 
 
-def evening_protocols_to_csv(input_path, result_path, patient_name, extended_features=False):
+def evening_protocols_to_csv(input_path, result_path, extended_features=False):
     files = [f for f in listdir(input_path) if isfile(join(input_path, f))
              & ('EVENING' in f)
              & f.endswith('.json')]
@@ -76,4 +76,4 @@ def evening_protocols_to_csv(input_path, result_path, patient_name, extended_fea
                 complete_df = insert_line(complete_df, phq_1, phq_2)
 
             evening_protocol.close()
-    complete_df.to_csv(result_path + '/' + patient_name + '_evening_protocols.csv', index=False)
+    complete_df.to_csv(result_path + '/evening_protocols.csv', index=False)

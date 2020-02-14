@@ -7,6 +7,7 @@ from fluffUtil import get_sensor_name, get_lines, writeListToFile, match_unix_st
 from numpy import fft
 from matplotlib import pyplot as plt
 
+
 # %matplotlib inline
 
 
@@ -118,7 +119,7 @@ def compress(file_name, output_dir='', file_path=''):
                                 val4_compressed.append(np.round(stats.trim_mean(lines[5][end_index:], 0.1), 2))
                                 val4_std_dev.append(np.round(np.std(lines[5][end_index:]), 2))
 
-                     # only write when there is data in the lists
+                    # only write when there is data in the lists
                     if len(time_series_compressed) != 0:
                         writeListToFile(time_series_compressed, output, 'time_series:')
                         writeListToFile(val1_compressed, output, '1:')

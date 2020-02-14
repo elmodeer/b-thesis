@@ -361,38 +361,46 @@ def fill_missing_range(result, features, missing_date, index):
     return index, result
 
 
-def labels_contain_this_date(labels, date):
-    for i, row in labels.iterrows():
+def evening_protocols_contain_this_date(evening_protocols, date):
+    for i, row in evening_protocols.iterrows():
         if row['date'] == date:
             return True
     return False
 
 
-def combine_features_and_labels(features, labels):
-    result = pd.DataFrame(columns=['date', 'alc', 'mood', 'tense',
+def extend_evening_protocols(features, evening_protocols, output_path):
+    result = pd.DataFrame(columns=['date', 'alc', 'cig', 'mood', 'tense',
                                    'tired', 'period', 'rumination', 'socialize', 'socialize_val',
-                                   'sport_time', 'work_time', 'phq_1', 'phq_2'])
+                                   'sport_time', 'work_time', 'day_sleep', 'phq_1', 'phq_2'])
 
     j = 0
     i = 0
     f_length = len(features.index)
-    l_length = len(labels.index)
+    l_length = len(evening_protocols.index)
     # 1- loop around the features data frame and accordingly copy the values of the evening protocols
     # 2- missing dates in the ev_protocols are filled with null values to be discarded in a later step. this work around
     # to help simplify the process of concatenating the two data frames.
+    if get_readable_date(features['time'].iloc[0]) != evening_protocols['date'].iloc[0]:
+        print('files does not start at the same time')
+        return
     while i < f_length:
         date = get_readable_date(features['time'].iloc[i])
-        label_row = labels.iloc[j]
-        if date == label_row['date']:
-            result = result.append({'date': label_row['date'], 'alc': label_row['alc'],
-                                    'mood': label_row['mood'], 'tense': label_row['tense'], 'tired': label_row['tired'],
-                                    'period': label_row['period'],
-                                    'rumination': label_row['rumination'], 'socialize': label_row['socialize'],
-                                    'socialize_val': label_row['socialize_val'],
-                                    'sport_time': label_row['sport_time'], 'work_time': label_row['work_time'],
-                                    'phq_1': label_row['phq_1'], 'phq_2': label_row['phq_2']}, ignore_index=True)
+        evening_protocol_row = evening_protocols.iloc[j]
+        if date == evening_protocol_row['date']:
+            result = result.append({'date': evening_protocol_row['date'], 'alc': evening_protocol_row['alc'],
+                                    'cig': evening_protocol_row['cig'],
+                                    'mood': evening_protocol_row['mood'], 'tense': evening_protocol_row['tense'],
+                                    'tired': evening_protocol_row['tired'], 'period': evening_protocol_row['period'],
+                                    'rumination': evening_protocol_row['rumination'],
+                                    'socialize': evening_protocol_row['socialize'],
+                                    'socialize_val': evening_protocol_row['socialize_val'],
+                                    'sport_time': evening_protocol_row['sport_time'],
+                                    'work_time': evening_protocol_row['work_time'],
+                                    'day_sleep': evening_protocol_row['day_sleep'],
+                                    'phq_1': evening_protocol_row['phq_1'], 'phq_2': evening_protocol_row['phq_2']},
+                                   ignore_index=True)
             i += 1
-        elif not labels_contain_this_date(labels, date):
+        elif not evening_protocols_contain_this_date(evening_protocols, date):
             i, result = fill_missing_range(result, features, date, i)
         else:
             print('at index ' + str(j) + ' of ' + str(l_length) + ' and index ' + str(i) + ' of ' + str(f_length))
@@ -400,4 +408,4 @@ def combine_features_and_labels(features, labels):
                 j += 1
     print(j)
     print(len(features.index))
-    result.to_csv('final.csv', index=False)
+    result.to_csv(output_path + 'evening_protocols_extended.csv', index=False)
