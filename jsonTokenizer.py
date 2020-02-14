@@ -76,4 +76,5 @@ def evening_protocols_to_csv(input_path, result_path, extended_features=False):
                 complete_df = insert_line(complete_df, phq_1, phq_2)
 
             evening_protocol.close()
+    complete_df.to_csv(result_path + '/evening_protocols_O.csv', index=False)
     complete_df.to_csv(result_path + '/evening_protocols.csv', index=False)

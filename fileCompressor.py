@@ -97,7 +97,7 @@ def compress(file_name, output_dir='', file_path=''):
                             end_index += compress_range
 
                     # process rest values
-                    if loops > 0:
+                    if loops > 0 and len(time_series_compressed) != 0 :
                         lastElement = time_series_compressed[-1]
                     else:
                         lastElement = unixTime + time_series[0] / 1000000

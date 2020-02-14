@@ -76,12 +76,12 @@ def combine_sd_and_ep(sensor_data_df, evening_protocols_df):
 
 
 def run_pipeline():
-    # patient = 'ST-1441993385, ST-1233329802'
-    # prefix_1 = 'A4-6C-F1-A0-2A-40, 14-9F-3C-DA-5B-26'
-    # prefix_2 = 'A4-6C-F1-09-C9-31, A4-6C-F1-A0-2A-1C'
-    patient = 'ST-1476193030'
-    prefix_1 = 'A4-6C-F1-18-7D-81'
-    prefix_2 = 'A4-6C-F1-A0-28-E6'
+    # patient = 'ST-1441993385, ST-1233329802, ST-1476193030'
+    # prefix_1 = 'A4-6C-F1-A0-2A-40, 14-9F-3C-DA-5B-26, 'A4-6C-F1-18-7D-81
+    # prefix_2 = 'A4-6C-F1-09-C9-31, A4-6C-F1-A0-2A-1C, A4-6C-F1-A0-28-E6'
+    patient = 'ST-1871742707'
+    prefix_1 = 'A4-6C-F1-09-C6-D5'
+    prefix_2 = 'A4-6C-F1-A0-2B-12'
     root = '/Volumes/hex/' + patient
     fluff_txt_path = root + '-txt'
     fluff_txt_files = [f for f in listdir(fluff_txt_path) if isfile(join(fluff_txt_path, f)) & f.endswith('.txt')]
@@ -96,8 +96,8 @@ def run_pipeline():
     #     if compress(result_path, labels):
     #         to_csv(result_path, prefix_1, prefix_2, labels)
     # separate_sensor_data(fluff_txt_files, fluff_txt_path, result_path, labels, prefix_1, prefix_2)
-    # compress_fluffs(result_path, labels)
-    # sensor_data_to_csv(result_path, prefix_1, prefix_2, labels)
+    compress_fluffs(result_path, labels)
+    sensor_data_to_csv(result_path, prefix_1, prefix_2, labels)
     evening_protocols_to_csv(evening_protocols_path, result_path,  extended_features=True)
 
 

@@ -316,6 +316,7 @@ def features_to_csv(files, prefix, file_path=''):
             file.close()
     # merge data frames:
     all_df = merge(df_collection)
+    all_df.to_csv(file_path + '/' + prefix + '_O.csv', index=False)
     all_df.to_csv(file_path + '/' + prefix + '.csv', index=False)
 
 
