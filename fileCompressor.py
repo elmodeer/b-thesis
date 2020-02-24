@@ -77,18 +77,18 @@ def compress(file_name, output_dir='', file_path=''):
                             # this entry is corrupt
                             continue
 
-                        val1_compressed.append(np.round(stats.median(lines[2][start_index:end_index]), 2))
+                        val1_compressed.append(np.round(np.median(lines[2][start_index:end_index]), 2))
                         val1_std_dev.append(np.round(np.std(lines[2][start_index:end_index]), 2))
                         if math.isnan(val1_compressed[-1]) or math.isnan(val1_std_dev[-1]):
                             print("nan")
                         if sensor_name in ['sg2_gyr', 'sg2_bar', 'sg2_acc', 'sg2_ped']:
-                            val2_compressed.append(np.round(stats.median(lines[3][start_index:end_index]), 2))
+                            val2_compressed.append(np.round(np.median(lines[3][start_index:end_index]), 2))
                             val2_std_dev.append(np.round(np.std(lines[3][start_index:end_index]), 2))
 
-                            val3_compressed.append(np.round(stats.median(lines[4][start_index:end_index]), 2))
+                            val3_compressed.append(np.round(np.median(lines[4][start_index:end_index]), 2))
                             val3_std_dev.append(np.round(np.std(lines[4][start_index:end_index]), 2))
                         if sensor_name in ['sg2_bar', 'sg2_ped', 'sg2_bar']:
-                            val4_compressed.append(np.round(stats.median(lines[5][start_index:end_index]), 2))
+                            val4_compressed.append(np.round(np.median(lines[5][start_index:end_index]), 2))
                             val4_std_dev.append(np.round(np.std(lines[5][start_index:end_index]), 2))
 
                         # update indices
@@ -105,18 +105,18 @@ def compress(file_name, output_dir='', file_path=''):
                         time_element = int(lastElement + 120)
                         if match_unix_stamp(time_element):
                             time_series_compressed.append(time_element)
-                            val1_compressed.append(np.round(stats.median(lines[2][end_index:]), 2))
+                            val1_compressed.append(np.round(np.median(lines[2][end_index:]), 2))
                             val1_std_dev.append(np.round(np.std(lines[2][end_index:]), 2))
                             if math.isnan(val1_compressed[-1]) or math.isnan(val1_std_dev[-1]):
                                 print("nan")
                             if sensor_name in ['sg2_gyr', 'sg2_bar', 'sg2_acc', 'sg2_ped']:
-                                val2_compressed.append(np.round(stats.median(lines[3][end_index:]), 2))
+                                val2_compressed.append(np.round(np.median(lines[3][end_index:]), 2))
                                 val2_std_dev.append(np.round(np.std(lines[3][end_index:]), 2))
 
-                                val3_compressed.append(np.round(stats.median(lines[4][end_index:]), 2))
+                                val3_compressed.append(np.round(np.median(lines[4][end_index:]), 2))
                                 val3_std_dev.append(np.round(np.std(lines[4][end_index:]), 2))
                             if sensor_name in ['sg2_bar', 'sg2_ped', 'sg2_bar']:
-                                val4_compressed.append(np.round(stats.median(lines[5][end_index:]), 2))
+                                val4_compressed.append(np.round(np.median(lines[5][end_index:]), 2))
                                 val4_std_dev.append(np.round(np.std(lines[5][end_index:]), 2))
 
                     # only write when there is data in the lists
