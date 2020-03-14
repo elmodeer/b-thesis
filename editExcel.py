@@ -1,10 +1,10 @@
 import pandas as pd
-from csvCreator import compare_string_dates
+import numpy as np
 from csvCreator import extend_evening_protocols
 from sklearn.impute import SimpleImputer
 
-patient = 'ST-1946093440'
-prefix = 'A4-6C-F1-1C-9D-01'
+patient = 'ST1814523348'
+prefix = 'A4-6C-F1-A0-28-E0'
 root = '/Volumes/hex/' + patient + '-res/'
 
 
@@ -40,7 +40,17 @@ def drop_evening_protocols_extended_nan_in_complete_df(df):
     return file_nan_free
 
 
+# # delete below 30 sec window
+def drop_below_30(df):
+    print(len(df.index))
+    indexNames = df[(df['window'] < 30)].index
+    df.drop(indexNames, inplace=True)
+    print(len(df.index))
+    return df
+
+
 def drop_and_impute(features, ev_protocols):
+    features = drop_below_30(features)
     file_nan_free = drop_nan_in_raw_features(features)
     impute_features = SimpleImputer(strategy='median')
     impute_features.fit(file_nan_free)
@@ -63,7 +73,7 @@ def drop_and_impute(features, ev_protocols):
                  index=ev_protocols.index).to_csv(root + 'evening_protocols_imputed.csv', index=False)
 
 
-# features has to be imputed first
+# # features has to be imputed first
 raw_features = pd.read_csv(root + prefix + '.csv')
 evening_protocols = pd.read_csv(root + 'evening_protocols.csv')
 
@@ -82,3 +92,4 @@ completed.to_csv(root + patient + '_1.0.csv', index=False)
 complete_1 = pd.read_csv(root + patient + '_1.0.csv')
 
 print("done")
+

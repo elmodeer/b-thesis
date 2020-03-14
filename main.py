@@ -32,7 +32,7 @@ def compress_fluffs(out_put_path, sensor_labels):
                        & ('compressed' not in f)
                        & f.endswith('.txt')]
     length = len(separated_files)
-    if length != (len(sensor_labels) * 2 - 2):
+    if length != (len(sensor_labels) * 2):
         print('files are not separated correctly, can not compress')
         return False
     else:
@@ -76,25 +76,24 @@ def combine_sd_and_ep(sensor_data_df, evening_protocols_df):
 
 
 def run_pipeline():
-    # patient = 'ST-1441993385, ST-1233329802, ST-1476193030'
-    # prefix_1 = 'A4-6C-F1-A0-2A-40, 14-9F-3C-DA-5B-26, 'A4-6C-F1-18-7D-81
-    # prefix_2 = 'A4-6C-F1-09-C9-31, A4-6C-F1-A0-2A-1C, A4-6C-F1-A0-28-E6'
-    patient = 'ST-1871742707'
-    prefix_1 = 'A4-6C-F1-09-C6-D5'
-    prefix_2 = 'A4-6C-F1-A0-2B-12'
+    # patient = 'ST-1441993385, ST-1233329802, ST-1476193030, ST-1871742707, ST-1946093440, ST1505558269'
+    # prefix_1 = 'A4-6C-F1-A0-2A-40, 14-9F-3C-DA-5B-26, 'A4-6C-F1-18-7D-81,A4-6C-F1-09-C6-D5,
+    # A4-6C-F1-1C-9D-01, D0-B1-28-37-1B-AE
+    # prefix_2 = 'A4-6C-F1-09-C9-31, A4-6C-F1-A0-2A-1C, A4-6C-F1-A0-28-E6, A4-6C-F1-A0-2B-12,
+    # BC-54-51-01-4B-D7, E0-AA-96-8C-F0-53'
+    patient = 'ST1814523348'
+    prefix_2 = 'A4-6C-F1-18-7B-01'
+    prefix_1 = 'A4-6C-F1-A0-28-E0'
     root = '/Volumes/hex/' + patient
     fluff_txt_path = root + '-txt'
     fluff_txt_files = [f for f in listdir(fluff_txt_path) if isfile(join(fluff_txt_path, f)) & f.endswith('.txt')]
-    labels = ['sg2_acc', 'sg2_hrt', 'sg2_gyr', 'sg2_ple', 'sg2_ped', 'sg2_bar', 'sg2_gps']
-    # labels = ['sg2_acc', 'sg2_hrt', 'sg2_gyr', 'sg2_ple', 'sg2_ped', 'sg2_bar']
+    # labels = ['sg2_acc', 'sg2_hrt', 'sg2_gyr', 'sg2_ple', 'sg2_ped', 'sg2_bar', 'sg2_gps']
+    labels = ['sg2_acc', 'sg2_hrt', 'sg2_gyr', 'sg2_ple', 'sg2_bar']
 
     # labels = ['sg2_gps']
     result_path = root + '-res'
     evening_protocols_path = '/Users/Hesham/dev/fluffDecoder/' + patient
-    #
-    # if separate(fluff_txt_files, fluff_txt_path, result_path, labels,  prefix_1, prefix_2):
-    #     if compress(result_path, labels):
-    #         to_csv(result_path, prefix_1, prefix_2, labels)
+
     # separate_sensor_data(fluff_txt_files, fluff_txt_path, result_path, labels, prefix_1, prefix_2)
     compress_fluffs(result_path, labels)
     sensor_data_to_csv(result_path, prefix_1, prefix_2, labels)

@@ -388,14 +388,25 @@ def extend_evening_protocols(features, evening_protocols, output_path):
         date = get_readable_date(features['time'].iloc[i])
         evening_protocol_row = evening_protocols.iloc[j]
         if date == evening_protocol_row['date']:
-            result = result.append({'date': evening_protocol_row['date'], 'alc': evening_protocol_row['alc'],
-                                    'cig': evening_protocol_row['cig'],
+            # result = result.append({'date': evening_protocol_row['date'], 'alc': evening_protocol_row['alc'],
+            #                         'cig': evening_protocol_row['cig'],
+            #                         'mood': evening_protocol_row['mood'], 'tense': evening_protocol_row['tense'],
+            #                         'tired': evening_protocol_row['tired'], 'period': evening_protocol_row['period'],
+            #                         'rumination': evening_protocol_row['rumination'],
+            #                         'socialize': evening_protocol_row['socialize'],
+            #                         'socialize_val': evening_protocol_row['socialize_val'],
+            #                         'sport_time': evening_protocol_row['sport_time'],
+            #                         'work_time': evening_protocol_row['work_time'],
+            #                         'day_sleep': evening_protocol_row['day_sleep'],
+            #                         'phq_1': evening_protocol_row['phq_1'], 'phq_2': evening_protocol_row['phq_2']},
+            #                        ignore_index=True)
+
+            result = result.append({'date': evening_protocol_row['date'],
                                     'mood': evening_protocol_row['mood'], 'tense': evening_protocol_row['tense'],
-                                    'tired': evening_protocol_row['tired'], 'period': evening_protocol_row['period'],
+                                    'tired': evening_protocol_row['tired'],
                                     'rumination': evening_protocol_row['rumination'],
                                     'socialize': evening_protocol_row['socialize'],
                                     'socialize_val': evening_protocol_row['socialize_val'],
-                                    'sport_time': evening_protocol_row['sport_time'],
                                     'work_time': evening_protocol_row['work_time'],
                                     'day_sleep': evening_protocol_row['day_sleep'],
                                     'phq_1': evening_protocol_row['phq_1'], 'phq_2': evening_protocol_row['phq_2']},
