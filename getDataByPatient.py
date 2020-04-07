@@ -102,20 +102,20 @@ print("Got all patients\n")
 
 
 for patient in patients:
-    if patient.startswith('ST1814523348'):
+    if patient.startswith('ST-1233329802'):
         chosenOne = patient
         break
 
 patient = chosenOne
-# print("Starting download of MorningProtocols for " + patient)
-# dl_morning(patient, cwd, os.getcwd())
-# print("Morning downloads for " + patient + " finished")
-# print()
-
-print("Starting download of EveningProtocols for " + patient)
-dl_evening(patient, cwd, os.getcwd())
-print("Evening downloads for " + patient + " finished")
+print("Starting download of MorningProtocols for " + patient)
+dl_morning(patient, cwd, os.getcwd())
+print("Morning downloads for " + patient + " finished")
 print()
+
+# print("Starting download of EveningProtocols for " + patient)
+# dl_evening(patient, cwd, os.getcwd())
+# print("Evening downloads for " + patient + " finished")
+# print()
 
 # print("Starting download of PHQProtocols for " + patient)
 # dl_phq(patient, cwd, os.getcwd())

@@ -3,6 +3,7 @@ from fileCompressor import compress
 from csvCreator import features_to_csv
 from os import mkdir, listdir
 from os.path import isfile, join
+import json
 from jsonTokenizer import evening_protocols_to_csv
 
 
@@ -95,10 +96,37 @@ def run_pipeline():
     evening_protocols_path = '/Users/Hesham/dev/fluffDecoder/' + patient
 
     # separate_sensor_data(fluff_txt_files, fluff_txt_path, result_path, labels, prefix_1, prefix_2)
-    compress_fluffs(result_path, labels)
-    sensor_data_to_csv(result_path, prefix_1, prefix_2, labels)
-    evening_protocols_to_csv(evening_protocols_path, result_path,  extended_features=True)
+    # compress_fluffs(result_path, labels)
+    # sensor_data_to_csv(result_path, prefix_1, prefix_2, labels)
+    # evening_protocols_to_csv(evening_protocols_path, result_path,  extended_features=True)
 
 
 # start the big bang
-run_pipeline()
+# run_pipeline()
+
+# correct json schemas for phq protocols
+def correct_phq_schemas():
+    path = '/Users/Hesham/dev/steadyusecase/src/main/resources/Patientendaten/ST-1233329802/phq'
+
+    files = [f for f in listdir(path) if isfile(join(path, f))
+             & ('PHQ' in f)
+             & f.endswith('.json')]
+
+    files.sort()
+    for file in files:
+        print(file)
+        json_content = ''
+        with open(path + '/' + file, 'rt') as evening_protocol:
+            content = evening_protocol.read()
+            content = content.replace("\'", "\"")
+            content = content.replace("\"contents\": \"{", "\"contents\": {")
+            content = content.replace("}\"", "}")
+            json_content = json.loads(content)
+            evening_protocol.close()
+        with open(path + '/' + file, 'w') as evening_protocol:
+            json.dump(json_content, evening_protocol)
+            evening_protocol.close()
+
+
+correct_phq_schemas()
+
