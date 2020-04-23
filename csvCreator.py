@@ -10,6 +10,7 @@ import re
 from fluffUtil import get_sensor_name, get_lines_to_read, get_values, match_unix_stamp
 
 
+# shall be adapted if sensor data is changed
 def insert_line(df, dict):
     df = df.append({'time': dict.get('time'),
                     'accX': dict.get('accX'), 'accX_std': dict.get('accX_std'),
@@ -42,6 +43,7 @@ def insert_line(df, dict):
     return df
 
 
+#  get next earliest date
 def get_next_earliest(df_collection):
     # get earliest data frame
     temp_dict = {}
@@ -203,7 +205,7 @@ def merge(df_collection):
     return complete_df
 
 
-def features_to_csv(files, prefix, file_path=''):
+def sensor_data_to_csv(files, prefix, file_path=''):
     df_collection = {}
     for file_name in files:
 
@@ -314,9 +316,9 @@ def features_to_csv(files, prefix, file_path=''):
             df = df.sort_values('time')
             df_collection[sensor_name] = df
             file.close()
-    # merge data frames:
+    # merge "sensor data" date frames:
     all_df = merge(df_collection)
-    all_df.to_csv(file_path + '/' + prefix + '_O.csv', index=False)
+    all_df.to_csv(file_path + '/' + prefix + '_Original.csv', index=False)
     all_df.to_csv(file_path + '/' + prefix + '.csv', index=False)
 
 
@@ -354,11 +356,11 @@ def get_readable_date(date):
     return datetime.utcfromtimestamp(date).strftime('%d.%m.%y')
 
 
+# fill missing ranges with NaN values to be removed later
 def fill_missing_range(result, features, missing_date, index):
     while index < len(features.index) and get_readable_date(features['time'].iloc[index]) == missing_date:
         result = result.append(pd.Series(), ignore_index=True)
         index += 1
-
     return index, result
 
 
@@ -369,23 +371,33 @@ def evening_protocols_contain_this_date(evening_protocols, date):
     return False
 
 
-def extend_evening_protocols(features, evening_protocols, output_path):
+def extend_evening_protocols(sensor_data, evening_protocols, output_path):
+    """
+    This method is very crucial, as it extends the evening protocols set depending on the corresponding sensor data
+    file. Basically, it copies the entry of a given day for the number of times this day was mentioned in the sensor
+    data file.
+    :param sensor_data: sensor data file
+    :param evening_protocols: evening protocols fils
+    :param output_path: where the result file shall be located
+    :return: Extended version of the evening protocols
+    """
+
+    # the features that shall be extended. Should be edited if the features changes.
     result = pd.DataFrame(columns=['date', 'alc', 'cig', 'mood', 'tense',
                                    'tired', 'period', 'rumination', 'socialize', 'socialize_val',
                                    'sport_time', 'work_time', 'day_sleep', 'phq_1', 'phq_2'])
-
     j = 0
     i = 0
-    f_length = len(features.index)
+    f_length = len(sensor_data.index)
     l_length = len(evening_protocols.index)
     # 1- loop around the features data frame and accordingly copy the values of the evening protocols
     # 2- missing dates in the ev_protocols are filled with null values to be discarded in a later step. this work around
     # to help simplify the process of concatenating the two data frames.
-    if get_readable_date(features['time'].iloc[0]) != evening_protocols['date'].iloc[0]:
+    if get_readable_date(sensor_data['time'].iloc[0]) != evening_protocols['date'].iloc[0]:
         print('files does not start at the same time')
         return
     while i < f_length:
-        date = get_readable_date(features['time'].iloc[i])
+        date = get_readable_date(sensor_data['time'].iloc[i])
         evening_protocol_row = evening_protocols.iloc[j]
         if date == evening_protocol_row['date']:
             # result = result.append({'date': evening_protocol_row['date'], 'alc': evening_protocol_row['alc'],
@@ -413,11 +425,11 @@ def extend_evening_protocols(features, evening_protocols, output_path):
                                    ignore_index=True)
             i += 1
         elif not evening_protocols_contain_this_date(evening_protocols, date):
-            i, result = fill_missing_range(result, features, date, i)
+            i, result = fill_missing_range(result, sensor_data, date, i)
         else:
             print('at index ' + str(j) + ' of ' + str(l_length) + ' and index ' + str(i) + ' of ' + str(f_length))
             if (j + 1) < l_length:
                 j += 1
     print(j)
-    print(len(features.index))
+    print(len(sensor_data.index))
     result.to_csv(output_path + 'evening_protocols_extended.csv', index=False)

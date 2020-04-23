@@ -1,6 +1,6 @@
 from sensorSeparator import separate
 from fileCompressor import compress
-from csvCreator import features_to_csv
+from csvCreator import sensor_data_to_csv
 from os import mkdir, listdir
 from os.path import isfile, join
 import json
@@ -66,9 +66,9 @@ def sensor_data_to_csv(out_put_path, prefix_1, prefix_2, sensor_labels, componen
         print('\nfiles are not compressed correctly')
     else:
         print('\ncompression sounds nice')
-        features_to_csv(compressed_files_x, prefix_1, file_path=out_put_path)
+        sensor_data_to_csv(compressed_files_x, prefix_1, file_path=out_put_path)
         if components == 2:
-            features_to_csv(compressed_files_y, prefix_2, file_path=out_put_path)
+            sensor_data_to_csv(compressed_files_y, prefix_2, file_path=out_put_path)
         print('\nAll to_csv finished')
 
 
@@ -77,56 +77,34 @@ def combine_sd_and_ep(sensor_data_df, evening_protocols_df):
 
 
 def run_pipeline():
-    # patient = 'ST-1441993385, ST-1233329802, ST-1476193030, ST-1871742707, ST-1946093440, ST1505558269'
-    # prefix_1 = 'A4-6C-F1-A0-2A-40, 14-9F-3C-DA-5B-26, 'A4-6C-F1-18-7D-81,A4-6C-F1-09-C6-D5,
-    # A4-6C-F1-1C-9D-01, D0-B1-28-37-1B-AE
-    # prefix_2 = 'A4-6C-F1-09-C9-31, A4-6C-F1-A0-2A-1C, A4-6C-F1-A0-28-E6, A4-6C-F1-A0-2B-12,
-    # BC-54-51-01-4B-D7, E0-AA-96-8C-F0-53'
+    """
+     Converts raw sensor data files and evening prtocols to CSV files. Results will be found at a new
+     folder with the same name as the folder where the data was but with "res" appended to the name.
+
+     Next steps in the pipeline with be found at the file editExcel.py. In general the code in editExcel.py is
+     specific to my conditions and can be ignored.
+    """
     patient = 'ST1814523348'
     prefix_2 = 'A4-6C-F1-18-7B-01'
     prefix_1 = 'A4-6C-F1-A0-28-E0'
     root = '/Volumes/hex/' + patient
     fluff_txt_path = root + '-txt'
     fluff_txt_files = [f for f in listdir(fluff_txt_path) if isfile(join(fluff_txt_path, f)) & f.endswith('.txt')]
-    # labels = ['sg2_acc', 'sg2_hrt', 'sg2_gyr', 'sg2_ple', 'sg2_ped', 'sg2_bar', 'sg2_gps']
-    labels = ['sg2_acc', 'sg2_hrt', 'sg2_gyr', 'sg2_ple', 'sg2_bar']
-
-    # labels = ['sg2_gps']
+    labels = ['sg2_acc', 'sg2_hrt', 'sg2_gyr', 'sg2_ple', 'sg2_ped', 'sg2_bar', 'sg2_gps']
     result_path = root + '-res'
     evening_protocols_path = '/Users/Hesham/dev/fluffDecoder/' + patient
-
-    # separate_sensor_data(fluff_txt_files, fluff_txt_path, result_path, labels, prefix_1, prefix_2)
-    # compress_fluffs(result_path, labels)
-    # sensor_data_to_csv(result_path, prefix_1, prefix_2, labels)
-    # evening_protocols_to_csv(evening_protocols_path, result_path,  extended_features=True)
+    # 1- separate to individual files
+    separate_sensor_data(fluff_txt_files, fluff_txt_path, result_path, labels, prefix_1, prefix_2)
+    # 2- compress individual files
+    compress_fluffs(result_path, labels)
+    # 3- convert sensor data to CSV
+    sensor_data_to_csv(result_path, prefix_1, prefix_2, labels)
+    # 4- convert evening protocols data to CSV
+    evening_protocols_to_csv(evening_protocols_path, result_path,  extended_features=True)
 
 
 # start the big bang
-# run_pipeline()
-
-# correct json schemas for phq protocols
-def correct_phq_schemas():
-    path = '/Users/Hesham/dev/steadyusecase/src/main/resources/Patientendaten/ST-1233329802/phq'
-
-    files = [f for f in listdir(path) if isfile(join(path, f))
-             & ('PHQ' in f)
-             & f.endswith('.json')]
-
-    files.sort()
-    for file in files:
-        print(file)
-        json_content = ''
-        with open(path + '/' + file, 'rt') as evening_protocol:
-            content = evening_protocol.read()
-            content = content.replace("\'", "\"")
-            content = content.replace("\"contents\": \"{", "\"contents\": {")
-            content = content.replace("}\"", "}")
-            json_content = json.loads(content)
-            evening_protocol.close()
-        with open(path + '/' + file, 'w') as evening_protocol:
-            json.dump(json_content, evening_protocol)
-            evening_protocol.close()
+run_pipeline()
 
 
-correct_phq_schemas()
 
