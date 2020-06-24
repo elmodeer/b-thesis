@@ -21,3 +21,7 @@ The code is divided into four major parts:
   - files for the SVM implementaions.
   
 apart from the general structure, the code is throughly documented. 
+
+## Thesis document
+
+[here](https://github.com/elmodeer/ba-fluffTokenizer/blob/master/Hesham_BT.pdf)
