@@ -11,6 +11,7 @@ and predict possible depressive episodes. The work also comprised a preprocessin
 for transforming and organizing the input data. The final assessment indicates current and
 future application possibilities of machine learning in the depression detection context.
     
+Tools/frameworks: Keras, tf, scikit-learn. 
 
 ## Structure
 
